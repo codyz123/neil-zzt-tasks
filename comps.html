@@ -160,21 +160,41 @@ async function loadRequest(){
     const card=document.createElement('div');
     card.className='comp-card';
     card.id='comp-'+c.id;
-    card.innerHTML=`
-      <div class="comp-header">
-        <span class="comp-number">Option ${c.option_number}</span>
-        <span class="comp-title">${c.title||''}</span>
-        <span class="approved-label">✅ APPROVED</span>
-      </div>
-      <div class="comp-content">${escHtml(c.content)}</div>
-      <div class="comp-actions" id="actions-${c.id}">
-        <button class="btn btn-approve" onclick="approveComp('${c.id}')">✅ Approve This One</button>
-        <button class="btn btn-edit" onclick="showEdit('${c.id}')">✏️ Request Edit</button>
-      </div>
-      <div class="edit-area" id="edit-${c.id}">
-        <textarea id="notes-${c.id}" placeholder="What would you change?"></textarea>
-        <button class="btn btn-edit" onclick="submitEdit('${c.id}')">Send Feedback →</button>
-      </div>`;
+
+    const header=document.createElement('div');
+    header.className='comp-header';
+    header.innerHTML='<span class="comp-number">Option '+c.option_number+'</span><span class="comp-title">'+escHtml(c.title||'')+'</span><span class="approved-label">✅ APPROVED</span>';
+    card.appendChild(header);
+
+    const content=document.createElement('div');
+    content.className='comp-content';
+    content.textContent=c.content;
+    card.appendChild(content);
+
+    const actions=document.createElement('div');
+    actions.className='comp-actions';
+    actions.id='actions-'+c.id;
+
+    const approveBtn=document.createElement('button');
+    approveBtn.className='btn btn-approve';
+    approveBtn.textContent='✅ Approve This One';
+    approveBtn.onclick=()=>approveComp(c.id);
+    actions.appendChild(approveBtn);
+
+    const editBtn=document.createElement('button');
+    editBtn.className='btn btn-edit';
+    editBtn.textContent='✏️ Request Edit';
+    editBtn.onclick=()=>showEdit(c.id);
+    actions.appendChild(editBtn);
+
+    card.appendChild(actions);
+
+    const editArea=document.createElement('div');
+    editArea.className='edit-area';
+    editArea.id='edit-'+c.id;
+    editArea.innerHTML='<textarea id="notes-'+c.id+'" placeholder="What would you change?"></textarea><button class="btn btn-edit" onclick="submitEdit(\''+c.id+'\')">Send Feedback →</button>';
+    card.appendChild(editArea);
+
     grid.appendChild(card);
   });
 }
