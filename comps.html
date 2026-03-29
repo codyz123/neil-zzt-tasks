@@ -201,7 +201,7 @@ async function approveComp(id){
   document.getElementById('statusBadge').style.background='#22c55e';
   const bar=document.getElementById('statusBar');
   bar.classList.add('visible');
-  document.getElementById('statusMsg').textContent='✅ Option approved! We\\'ll finalize and deliver.';
+  document.getElementById('statusMsg').textContent='✅ Option approved! We will finalize and deliver.';
 
   // Update request status
   await fetch(`${SUPABASE_URL}/rest/v1/marketing_requests?id=eq.${requestId}`,{
