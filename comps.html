@@ -14,7 +14,7 @@ body{font-family:'DM Sans',sans-serif;background:#f8f9fa;color:var(--navy);min-h
 .header a{color:rgba(255,255,255,.5);text-decoration:none;font-size:.9rem}
 .header a:hover{color:var(--white)}
 .header h1{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:1.3rem;flex:1}
-.header .badge{background:var(--lime);color:var(--navy);font-family:'Inter Tight',sans-serif;font-weight:700;font-size:.75rem;padding:.25rem .6rem;border-radius:4px}
+.header .badge{background:var(--sky);color:var(--navy);font-family:'Inter Tight',sans-serif;font-weight:700;font-size:.75rem;padding:.25rem .6rem;border-radius:4px}
 
 .request-card{background:var(--white);border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;margin:1.5rem;max-width:800px;margin-left:auto;margin-right:auto}
 .request-card h2{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:1rem}
@@ -100,11 +100,10 @@ body{font-family:'DM Sans',sans-serif;background:#f8f9fa;color:var(--navy);min-h
 <div class="header">
   <a href="index.html">← Tasks</a>
   <h1>Spark Review</h1>
-  <span class="badge" id="statusBadge">DRAFTS</span>
+  <span class="badge" id="statusBadge">REVIEW</span>
 </div>
 
 <div id="requestSection" class="loading">Loading request...</div>
-<div class="status-bar" id="statusBar"><div class="status-msg" id="statusMsg"></div></div>
 <div class="comps-grid" id="compsGrid"></div>
 
 <script>
@@ -188,30 +187,6 @@ async function loadRequest(){
       card.appendChild(content);
     }
 
-    const actions=document.createElement('div');
-    actions.className='comp-actions';
-    actions.id='actions-'+c.id;
-
-    const approveBtn=document.createElement('button');
-    approveBtn.className='btn btn-approve';
-    approveBtn.textContent='✅ Approve This One';
-    approveBtn.onclick=()=>approveComp(c.id);
-    actions.appendChild(approveBtn);
-
-    const editBtn=document.createElement('button');
-    editBtn.className='btn btn-edit';
-    editBtn.textContent='✏️ Request Edit';
-    editBtn.onclick=()=>showEdit(c.id);
-    actions.appendChild(editBtn);
-
-    card.appendChild(actions);
-
-    const editArea=document.createElement('div');
-    editArea.className='edit-area';
-    editArea.id='edit-'+c.id;
-    editArea.innerHTML='<textarea id="notes-'+c.id+'" placeholder="What would you change?"></textarea><button class="btn btn-edit" onclick="submitEdit(\''+c.id+'\')">Send Feedback →</button>';
-    card.appendChild(editArea);
-
     grid.appendChild(card);
   });
   }catch(err){
@@ -221,53 +196,6 @@ async function loadRequest(){
 }
 
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-function showEdit(id){
-  document.getElementById('edit-'+id).classList.toggle('visible');
-}
-
-async function approveComp(id){
-  await fetch(`${SUPABASE_URL}/rest/v1/spark_comps?id=eq.${id}`,{
-    method:'PATCH',headers:{...hdrs,'Prefer':'return=minimal'},
-    body:JSON.stringify({status:'approved',updated_at:new Date().toISOString()})
-  });
-  // Mark all others as rejected
-  const card=document.getElementById('comp-'+id);
-  document.querySelectorAll('.comp-card').forEach(c=>{
-    if(c.id!=='comp-'+id){c.classList.add('rejected');c.querySelector('.comp-actions').style.display='none';}
-  });
-  card.classList.add('approved');
-  card.querySelector('.comp-actions').style.display='none';
-  document.getElementById('statusBadge').textContent='APPROVED';
-  document.getElementById('statusBadge').style.background='#22c55e';
-  const bar=document.getElementById('statusBar');
-  bar.classList.add('visible');
-  document.getElementById('statusMsg').textContent='✅ Option approved! We will finalize and deliver.';
-
-  // Update request status
-  await fetch(`${SUPABASE_URL}/rest/v1/marketing_requests?id=eq.${requestId}`,{
-    method:'PATCH',headers:{...hdrs,'Prefer':'return=minimal'},
-    body:JSON.stringify({status:'approved',updated_at:new Date().toISOString()})
-  });
-}
-
-async function submitEdit(id){
-  const notes=document.getElementById('notes-'+id).value.trim();
-  if(!notes)return;
-  await fetch(`${SUPABASE_URL}/rest/v1/spark_comps?id=eq.${id}`,{
-    method:'PATCH',headers:{...hdrs,'Prefer':'return=minimal'},
-    body:JSON.stringify({status:'revision_requested',neil_notes:notes,updated_at:new Date().toISOString()})
-  });
-  const card=document.getElementById('comp-'+id);
-  card.style.borderColor='#f59e0b';
-  document.getElementById('edit-'+id).innerHTML='<p style="color:#d97706;font-weight:600;margin-top:.75rem">✏️ Feedback sent — SDA will revise.</p>';
-
-  // Update request status
-  await fetch(`${SUPABASE_URL}/rest/v1/marketing_requests?id=eq.${requestId}`,{
-    method:'PATCH',headers:{...hdrs,'Prefer':'return=minimal'},
-    body:JSON.stringify({status:'revision_requested',updated_at:new Date().toISOString()})
-  });
-}
 </script>
 </body>
 </html>

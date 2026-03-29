@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Marketing Request — Zero Zero Two</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#141B3A;--pink:#D69BC6;--lime:#E3FB61;--sky:#B9E3EA;--cream:#FCFAF1;--white:#fff;--green:#22c55e}
+body{font-family:'DM Sans',sans-serif;background:#f8f9fa;color:var(--navy);min-height:100vh}
+
+.header{background:var(--navy);color:var(--white);padding:1.5rem;text-align:center}
+.header h1{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:1.4rem;margin-bottom:.35rem}
+.header p{color:rgba(255,255,255,.5);font-size:.9rem}
+
+.container{max-width:700px;margin:0 auto;padding:1.5rem}
+
+.request-summary{background:var(--white);border:1px solid #e5e7eb;border-radius:12px;padding:1.25rem;margin-bottom:1.5rem}
+.request-summary h3{font-family:'Inter Tight',sans-serif;font-weight:700;font-size:.95rem;color:#6b7280;margin-bottom:.5rem}
+.request-summary p{font-size:.9rem;color:#4b5563;line-height:1.5}
+
+.comp-card{background:var(--white);border:2px solid #e5e7eb;border-radius:12px;padding:1.5rem;margin-bottom:1.25rem}
+.comp-label{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:.8rem;background:var(--navy);color:var(--white);padding:.25rem .6rem;border-radius:4px;display:inline-block;margin-bottom:1rem}
+.comp-content{background:#f8f9fa;border-radius:8px;padding:1.25rem;font-size:.95rem;line-height:1.7;white-space:pre-wrap;color:#1f2937;border:1px solid #e5e7eb}
+.comp-content img{width:100%;height:auto;border-radius:8px;display:block}
+
+.actions{margin-top:2rem;text-align:center}
+.btn{
+  font-family:'Inter Tight',sans-serif;font-weight:700;font-size:1rem;
+  padding:.85rem 2rem;border-radius:10px;border:none;cursor:pointer;
+  transition:opacity .2s,transform .15s;display:inline-block;margin:.5rem;
+}
+.btn:hover{opacity:.85}
+.btn:active{transform:scale(.97)}
+.btn-approve{background:var(--green);color:var(--white);font-size:1.1rem}
+.btn-revise{background:var(--navy);color:var(--white)}
+
+.revise-section{display:none;margin-top:1.5rem}
+.revise-section.visible{display:block}
+.revise-section textarea{
+  width:100%;border:2px solid #d1d5db;border-radius:10px;padding:1rem;
+  font-family:'DM Sans',sans-serif;font-size:1rem;line-height:1.5;
+  resize:vertical;min-height:120px;outline:none;color:var(--navy);
+}
+.revise-section textarea:focus{border-color:var(--navy)}
+.revise-section .btn{margin-top:1rem}
+
+.success-msg{
+  display:none;background:var(--green);color:var(--white);padding:1.5rem;
+  border-radius:12px;text-align:center;margin-top:1.5rem;
+  font-family:'Inter Tight',sans-serif;font-weight:700;font-size:1.1rem;
+}
+.success-msg.visible{display:block}
+.success-msg p{font-weight:400;font-family:'DM Sans',sans-serif;font-size:.95rem;margin-top:.5rem}
+
+.loading{text-align:center;padding:4rem;color:#9ca3af;font-size:1.1rem}
+
+@media(max-width:600px){
+  .container{padding:1rem}
+  .btn{width:100%;margin:.5rem 0}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ Your Spark Delivery</h1>
+  <p>Zero Zero Two Marketing</p>
+</div>
+
+<div class="container">
+  <div id="requestSummary"></div>
+  <div id="compsArea" class="loading">Loading your deliverable...</div>
+  <div class="actions" id="actionsArea" style="display:none">
+    <button class="btn btn-approve" onclick="handleApprove()">✅ Approve — Looks Great</button>
+    <button class="btn btn-revise" onclick="showRevise()">✏️ Request Changes</button>
+  </div>
+  <div class="revise-section" id="reviseSection">
+    <textarea id="reviseNotes" placeholder="What would you change? Be as specific as possible."></textarea>
+    <button class="btn btn-revise" onclick="submitRevision()">Send Feedback →</button>
+  </div>
+  <div class="success-msg" id="approveMsg">✅ Approved!<p>You're all set. We'll finalize and deliver.</p></div>
+  <div class="success-msg" id="reviseMsg" style="background:var(--navy)">✏️ Feedback Sent<p>We'll revise and send you an updated version.</p></div>
+</div>
+
+<script>
+var SUPABASE_URL='https://qqlqqknlqqdyukxoyyty.supabase.co';
+var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbHFxa25scXFkeXVreG95eXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTYzOTQsImV4cCI6MjA4ODEzMjM5NH0.jZBd3dM1aNjRqDXxL0a3p0V8BPtfdZ8I4LaAKN4_1mk';
+var hdrs={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'};
+var params=new URLSearchParams(window.location.search);
+var requestId=params.get('id');
+var SDA_EMAIL='dinksalot@zerozerotwo.pro';
+
+if(!requestId){
+  document.getElementById('compsArea').innerHTML='<p>Invalid link.</p>';
+}else{
+  loadDelivery();
+}
+
+async function loadDelivery(){
+  try{
+    var reqRes=await fetch(SUPABASE_URL+'/rest/v1/marketing_requests?id=eq.'+requestId,{headers:hdrs});
+    var reqs=await reqRes.json();
+    if(!reqs.length){document.getElementById('compsArea').innerHTML='<p>Request not found.</p>';return;}
+    var r=reqs[0];
+    var types=(r.request_types||[]).join(', ');
+
+    var summary=document.getElementById('requestSummary');
+    var sumCard=document.createElement('div');
+    sumCard.className='request-summary';
+    var h3=document.createElement('h3');
+    h3.textContent='Your request: '+types;
+    sumCard.appendChild(h3);
+    var det=document.createElement('p');
+    det.textContent=r.details;
+    sumCard.appendChild(det);
+    summary.appendChild(sumCard);
+
+    // Fetch approved comps only
+    var compRes=await fetch(SUPABASE_URL+'/rest/v1/spark_comps?request_id=eq.'+requestId+'&status=eq.approved&order=option_number.asc',{headers:hdrs});
+    var comps=await compRes.json();
+    var area=document.getElementById('compsArea');
+    area.innerHTML='';
+    area.className='';
+
+    if(!comps.length){
+      area.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Your deliverable is still being finalized. Check back soon!</p>';
+      return;
+    }
+
+    comps.forEach(function(c){
+      var card=document.createElement('div');
+      card.className='comp-card';
+      var label=document.createElement('span');
+      label.className='comp-label';
+      label.textContent=c.title||'Deliverable';
+      card.appendChild(label);
+
+      if(c.comp_type==='image'){
+        var wrap=document.createElement('div');
+        wrap.className='comp-content';
+        wrap.style.padding='0';wrap.style.border='none';wrap.style.background='none';
+        var img=document.createElement('img');
+        img.src=c.content;img.alt=c.title||'';
+        wrap.appendChild(img);
+        card.appendChild(wrap);
+      }else{
+        var content=document.createElement('div');
+        content.className='comp-content';
+        content.textContent=c.content;
+        card.appendChild(content);
+      }
+      area.appendChild(card);
+    });
+
+    document.getElementById('actionsArea').style.display='block';
+  }catch(err){
+    document.getElementById('compsArea').innerHTML='<p style="color:red">Error loading: '+err.message+'</p>';
+  }
+}
+
+function showRevise(){
+  document.getElementById('reviseSection').classList.toggle('visible');
+}
+
+async function handleApprove(){
+  await fetch(SUPABASE_URL+'/rest/v1/marketing_requests?id=eq.'+requestId,{
+    method:'PATCH',headers:Object.assign({},hdrs,{'Prefer':'return=minimal'}),
+    body:JSON.stringify({status:'delivered',updated_at:new Date().toISOString()})
+  });
+  document.getElementById('actionsArea').style.display='none';
+  document.getElementById('reviseSection').classList.remove('visible');
+  document.getElementById('approveMsg').classList.add('visible');
+}
+
+async function submitRevision(){
+  var notes=document.getElementById('reviseNotes').value.trim();
+  if(!notes)return;
+
+  // Save revision notes to Supabase
+  await fetch(SUPABASE_URL+'/rest/v1/marketing_requests?id=eq.'+requestId,{
+    method:'PATCH',headers:Object.assign({},hdrs,{'Prefer':'return=minimal'}),
+    body:JSON.stringify({status:'requester_revision',updated_at:new Date().toISOString()})
+  });
+
+  // Email revision to SDA via mailto fallback + save to DB
+  // Store the revision in a new comp row as feedback
+  await fetch(SUPABASE_URL+'/rest/v1/spark_comps',{
+    method:'POST',headers:Object.assign({},hdrs,{'Prefer':'return=minimal'}),
+    body:JSON.stringify({
+      request_id:requestId,
+      option_number:99,
+      title:'Requester Revision Notes',
+      content:notes,
+      comp_type:'feedback',
+      status:'revision_requested'
+    })
+  });
+
+  // Open mailto as backup delivery
+  var subject=encodeURIComponent('Spark Revision Request - '+requestId);
+  var body=encodeURIComponent('Revision notes from requester:\n\n'+notes+'\n\nRequest ID: '+requestId);
+  window.location.href='mailto:'+SDA_EMAIL+'?subject='+subject+'&body='+body;
+
+  document.getElementById('actionsArea').style.display='none';
+  document.getElementById('reviseSection').classList.remove('visible');
+  document.getElementById('reviseMsg').classList.add('visible');
+}
+</script>
+</body>
+</html>
