@@ -122,8 +122,9 @@ if(!requestId){
 }
 
 async function loadRequest(){
+  try{
   // Fetch request
-  const reqRes=await fetch(`${SUPABASE_URL}/rest/v1/marketing_requests?id=eq.${requestId}`,{headers:hdrs});
+  const reqRes=await fetch(SUPABASE_URL+'/rest/v1/marketing_requests?id=eq.'+requestId,{headers:hdrs});
   const reqs=await reqRes.json();
   if(!reqs.length){
     document.getElementById('requestSection').innerHTML='<div class="request-card"><h2>Request not found</h2></div>';
@@ -133,21 +134,25 @@ async function loadRequest(){
   const types=(r.request_types||[]).join(', ');
   const urgencyClass=r.urgency==='Today'?'urgency-today':r.urgency==='This Week'?'urgency-this-week':'';
 
-  document.getElementById('requestSection').innerHTML=`
-    <div class="request-card">
-      <h2>⚡ ${types}</h2>
-      <div class="request-meta">
-        <span class="meta-tag">From: ${r.requester_email}</span>
-        <span class="meta-tag ${urgencyClass}">${r.urgency}</span>
-        ${r.target_date?`<span class="meta-tag">📌 ${r.target_date}</span>`:''}
-        ${(r.attachment_urls||[]).length?`<span class="meta-tag">📎 ${r.attachment_urls.length} files</span>`:''}
-      </div>
-      <div class="request-details">${r.details}</div>
-      ${r.goal?`<div class="request-goal">Goal: ${r.goal}</div>`:''}
-    </div>`;
+  const reqCard=document.createElement('div');
+  reqCard.className='request-card';
+  const h2=document.createElement('h2');
+  h2.textContent='⚡ '+types;
+  reqCard.appendChild(h2);
+  const meta=document.createElement('div');
+  meta.className='request-meta';
+  const fromTag=document.createElement('span');fromTag.className='meta-tag';fromTag.textContent='From: '+r.requester_email;meta.appendChild(fromTag);
+  const urgTag=document.createElement('span');urgTag.className='meta-tag '+urgencyClass;urgTag.textContent=r.urgency;meta.appendChild(urgTag);
+  if(r.target_date){const dt=document.createElement('span');dt.className='meta-tag';dt.textContent='📌 '+r.target_date;meta.appendChild(dt);}
+  if((r.attachment_urls||[]).length){const at=document.createElement('span');at.className='meta-tag';at.textContent='📎 '+r.attachment_urls.length+' files';meta.appendChild(at);}
+  reqCard.appendChild(meta);
+  const det=document.createElement('div');det.className='request-details';det.textContent=r.details;reqCard.appendChild(det);
+  if(r.goal){const gl=document.createElement('div');gl.className='request-goal';gl.textContent='Goal: '+r.goal;reqCard.appendChild(gl);}
+  document.getElementById('requestSection').innerHTML='';
+  document.getElementById('requestSection').appendChild(reqCard);
 
   // Fetch comps
-  const compRes=await fetch(`${SUPABASE_URL}/rest/v1/spark_comps?request_id=eq.${requestId}&order=option_number.asc`,{headers:hdrs});
+  const compRes=await fetch(SUPABASE_URL+'/rest/v1/spark_comps?request_id=eq.'+requestId+'&order=option_number.asc',{headers:hdrs});
   const comps=await compRes.json();
   const grid=document.getElementById('compsGrid');
 
@@ -209,6 +214,10 @@ async function loadRequest(){
 
     grid.appendChild(card);
   });
+  }catch(err){
+    document.getElementById('compsGrid').innerHTML='<p style="color:red;padding:2rem">Error: '+err.message+'</p>';
+    console.error(err);
+  }
 }
 
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
