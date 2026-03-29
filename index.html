@@ -373,6 +373,7 @@ function renderTaskItem(t) {
           <span class="tag ${PRIO_TAG[t.priority]}">${t.priority}</span>
           <span class="tag tag-cat">${t.category}</span>
           ${t.source ? `<span class="tag tag-src">${SRC_ICON[t.source] || ''} ${t.source}</span>` : ''}
+          ${t.source === 'spark-form' ? `<a href="comps.html?id=${t.notes && t.notes.match(/request_id:([a-f0-9-]+)/)?.[1] || ''}" onclick="event.stopPropagation()" class="tag" style="background:#E3FB61;color:#141B3A;font-weight:700;text-decoration:none">⚡ View Comps →</a>` : ''}
           ${dueLabel}
           ${t.assigned_to && t.assigned_to !== 'neil' ? `<span class="task-due">→ ${t.assigned_to}</span>` : ''}
         </div>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spark Comps — Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#141B3A;--pink:#D69BC6;--lime:#E3FB61;--sky:#B9E3EA;--cream:#FCFAF1;--white:#fff;--green:#22c55e;--red:#ef4444}
+body{font-family:'DM Sans',sans-serif;background:#f8f9fa;color:var(--navy);min-height:100vh}
+
+.header{background:var(--navy);color:var(--white);padding:1.25rem 1.5rem;display:flex;align-items:center;gap:1rem}
+.header a{color:rgba(255,255,255,.5);text-decoration:none;font-size:.9rem}
+.header a:hover{color:var(--white)}
+.header h1{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:1.3rem;flex:1}
+.header .badge{background:var(--lime);color:var(--navy);font-family:'Inter Tight',sans-serif;font-weight:700;font-size:.75rem;padding:.25rem .6rem;border-radius:4px}
+
+.request-card{background:var(--white);border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;margin:1.5rem;max-width:800px;margin-left:auto;margin-right:auto}
+.request-card h2{font-family:'Inter Tight',sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:1rem}
+.request-meta{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem}
+.meta-tag{background:#f1f5f9;border-radius:6px;padding:.35rem .7rem;font-size:.85rem;font-weight:500}
+.meta-tag.urgency-today,.meta-tag.urgency-critical{background:#fef2f2;color:var(--red)}
+.meta-tag.urgency-this-week,.meta-tag.urgency-high{background:#fffbeb;color:#d97706}
+.request-details{color:#4b5563;font-size:.95rem;line-height:1.6;margin-bottom:.75rem}
+.request-goal{color:#6b7280;font-size:.9rem;font-style:italic}
+
+.comps-grid{max-width:800px;margin:0 auto;padding:0 1.5rem 2rem}
+.comp-card{
+  background:var(--white);border:2px solid #e5e7eb;border-radius:12px;
+  padding:1.5rem;margin-bottom:1.25rem;transition:border-color .2s;
+}
+.comp-card:hover{border-color:var(--navy)}
+.comp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.comp-number{
+  font-family:'Inter Tight',sans-serif;font-weight:800;font-size:.8rem;
+  background:var(--navy);color:var(--white);padding:.25rem .6rem;border-radius:4px;
+}
+.comp-title{font-family:'Inter Tight',sans-serif;font-weight:700;font-size:1rem;margin-left:.75rem;flex:1}
+.comp-content{
+  background:#f8f9fa;border-radius:8px;padding:1.25rem;
+  font-size:.95rem;line-height:1.7;white-space:pre-wrap;color:#1f2937;
+  border:1px solid #e5e7eb;
+}
+.comp-actions{display:flex;gap:.75rem;margin-top:1.25rem;flex-wrap:wrap}
+.btn{
+  font-family:'Inter Tight',sans-serif;font-weight:700;font-size:.9rem;
+  padding:.6rem 1.25rem;border-radius:8px;border:none;cursor:pointer;
+  transition:opacity .2s,transform .15s;
+}
+.btn:hover{opacity:.85}
+.btn:active{transform:scale(.97)}
+.btn-approve{background:var(--green);color:var(--white)}
+.btn-edit{background:var(--navy);color:var(--white)}
+.btn-reject{background:transparent;color:#9ca3af;border:1px solid #d1d5db}
+
+.edit-area{
+  display:none;margin-top:1rem;
+}
+.edit-area.visible{display:block}
+.edit-area textarea{
+  width:100%;border:1.5px solid #d1d5db;border-radius:8px;padding:.85rem;
+  font-family:'DM Sans',sans-serif;font-size:.95rem;line-height:1.5;
+  resize:vertical;min-height:80px;outline:none;color:var(--navy);
+}
+.edit-area textarea:focus{border-color:var(--navy)}
+.edit-area .btn{margin-top:.75rem}
+
+.comp-card.approved{border-color:var(--green);background:#f0fdf4}
+.comp-card.approved .comp-number{background:var(--green)}
+.comp-card.rejected{opacity:.4}
+.approved-label{
+  font-family:'Inter Tight',sans-serif;font-weight:700;color:var(--green);
+  font-size:.85rem;display:none;
+}
+.comp-card.approved .approved-label{display:inline}
+
+.status-bar{
+  max-width:800px;margin:0 auto;padding:1rem 1.5rem;
+  display:none;
+}
+.status-bar.visible{display:block}
+.status-msg{
+  background:var(--green);color:var(--white);padding:1rem 1.25rem;
+  border-radius:10px;font-family:'Inter Tight',sans-serif;font-weight:700;
+  text-align:center;font-size:1rem;
+}
+
+.loading{text-align:center;padding:4rem;color:#9ca3af;font-size:1.1rem}
+
+@media(max-width:600px){
+  .request-card,.comps-grid{margin-left:.75rem;margin-right:.75rem;padding-left:.75rem;padding-right:.75rem}
+  .comp-actions{flex-direction:column}
+  .btn{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html">← Tasks</a>
+  <h1>Spark Review</h1>
+  <span class="badge" id="statusBadge">DRAFTS</span>
+</div>
+
+<div id="requestSection" class="loading">Loading request...</div>
+<div class="status-bar" id="statusBar"><div class="status-msg" id="statusMsg"></div></div>
+<div class="comps-grid" id="compsGrid"></div>
+
+<script>
+const SUPABASE_URL='https://qqlqqknlqqdyukxoyyty.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbHFxa25scXFkeXVreG95eXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTYzOTQsImV4cCI6MjA4ODEzMjM5NH0.jZBd3dM1aNjRqDXxL0a3p0V8BPtfdZ8I4LaAKN4_1mk';
+const hdrs={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'};
+
+const params=new URLSearchParams(window.location.search);
+const requestId=params.get('id');
+
+if(!requestId){
+  document.getElementById('requestSection').innerHTML='<div class="request-card"><h2>No request ID provided</h2><p>Add ?id=REQUEST_ID to the URL</p></div>';
+}else{
+  loadRequest();
+}
+
+async function loadRequest(){
+  // Fetch request
+  const reqRes=await fetch(`${SUPABASE_URL}/rest/v1/marketing_requests?id=eq.${requestId}`,{headers:hdrs});
+  const reqs=await reqRes.json();
+  if(!reqs.length){
+    document.getElementById('requestSection').innerHTML='<div class="request-card"><h2>Request not found</h2></div>';
+    return;
+  }
+  const r=reqs[0];
+  const types=(r.request_types||[]).join(', ');
+  const urgencyClass=r.urgency==='Today'?'urgency-today':r.urgency==='This Week'?'urgency-this-week':'';
+
+  document.getElementById('requestSection').innerHTML=`
+    <div class="request-card">
+      <h2>⚡ ${types}</h2>
+      <div class="request-meta">
+        <span class="meta-tag">From: ${r.requester_email}</span>
+        <span class="meta-tag ${urgencyClass}">${r.urgency}</span>
+        ${r.target_date?`<span class="meta-tag">📌 ${r.target_date}</span>`:''}
+        ${(r.attachment_urls||[]).length?`<span class="meta-tag">📎 ${r.attachment_urls.length} files</span>`:''}
+      </div>
+      <div class="request-details">${r.details}</div>
+      ${r.goal?`<div class="request-goal">Goal: ${r.goal}</div>`:''}
+    </div>`;
+
+  // Fetch comps
+  const compRes=await fetch(`${SUPABASE_URL}/rest/v1/spark_comps?request_id=eq.${requestId}&order=option_number.asc`,{headers:hdrs});
+  const comps=await compRes.json();
+  const grid=document.getElementById('compsGrid');
+
+  if(!comps.length){
+    grid.innerHTML='<p style="text-align:center;color:#9ca3af;padding:2rem">Comps are being drafted. Check back shortly.</p>';
+    return;
+  }
+
+  comps.forEach(c=>{
+    const card=document.createElement('div');
+    card.className='comp-card';
+    card.id='comp-'+c.id;
+    card.innerHTML=`
+      <div class="comp-header">
+        <span class="comp-number">Option ${c.option_number}</span>
+        <span class="comp-title">${c.title||''}</span>
+        <span class="approved-label">✅ APPROVED</span>
+      </div>
+      <div class="comp-content">${escHtml(c.content)}</div>
+      <div class="comp-actions" id="actions-${c.id}">
+        <button class="btn btn-approve" onclick="approveComp('${c.id}')">✅ Approve This One</button>
+        <button class="btn btn-edit" onclick="showEdit('${c.id}')">✏️ Request Edit</button>
+      </div>
+      <div class="edit-area" id="edit-${c.id}">
+        <textarea id="notes-${c.id}" placeholder="What would you change?"></textarea>
+        <button class="btn btn-edit" onclick="submitEdit('${c.id}')">Send Feedback →</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function showEdit(id){
+  document.getElementById('edit-'+id).classList.toggle('visible');
+}
+
+async function approveComp(id){
+  await fetch(`${SUPABASE_URL}/rest/v1/spark_comps?id=eq.${id}`,{
+    method:'PATCH',headers:{...hdrs,'Prefer':'return=minimal'},
+    body:JSON.stringify({status:'approved',updated_at:new Date().toISOString()})
+  });
+  // Mark all others as rejected
+  const card=document.getElementById('comp-'+id);
+  document.querySelectorAll('.comp-card').forEach(c=>{
+    if(c.id!=='comp-'+id){c.classList.add('rejected');c.querySelector('.comp-actions').style.display='none';}
+  });
+  card.classList.add('approved');
+  card.querySelector('.comp-actions').style.display='none';
+  document.getElementById('statusBadge').textContent='APPROVED';
+  document.getElementById('statusBadge').style.background='#22c55e';
+  const bar=document.getElementById('statusBar');
+  bar.classList.add('visible');
+  document.getElementById('statusMsg').textContent='✅ Option approved! We\\'ll finalize and deliver.';
+
+  // Update request status
+  await fetch(`${SUPABASE_URL}/rest/v1/marketing_requests?id=eq.${requestId}`,{
+    method:'PATCH',headers:{...hdrs,'Prefer':'return=minimal'},
+    body:JSON.stringify({status:'approved',updated_at:new Date().toISOString()})
+  });
+}
+
+async function submitEdit(id){
+  const notes=document.getElementById('notes-'+id).value.trim();
+  if(!notes)return;
+  await fetch(`${SUPABASE_URL}/rest/v1/spark_comps?id=eq.${id}`,{
+    method:'PATCH',headers:{...hdrs,'Prefer':'return=minimal'},
+    body:JSON.stringify({status:'revision_requested',neil_notes:notes,updated_at:new Date().toISOString()})
+  });
+  const card=document.getElementById('comp-'+id);
+  card.style.borderColor='#f59e0b';
+  document.getElementById('edit-'+id).innerHTML='<p style="color:#d97706;font-weight:600;margin-top:.75rem">✏️ Feedback sent — SDA will revise.</p>';
+
+  // Update request status
+  await fetch(`${SUPABASE_URL}/rest/v1/marketing_requests?id=eq.${requestId}`,{
+    method:'PATCH',headers:{...hdrs,'Prefer':'return=minimal'},
+    body:JSON.stringify({status:'revision_requested',updated_at:new Date().toISOString()})
+  });
+}
+</script>
+</body>
+</html>
