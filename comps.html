@@ -166,10 +166,22 @@ async function loadRequest(){
     header.innerHTML='<span class="comp-number">Option '+c.option_number+'</span><span class="comp-title">'+escHtml(c.title||'')+'</span><span class="approved-label">✅ APPROVED</span>';
     card.appendChild(header);
 
-    const content=document.createElement('div');
-    content.className='comp-content';
-    content.textContent=c.content;
-    card.appendChild(content);
+    if(c.comp_type==='image'){
+      const imgWrap=document.createElement('div');
+      imgWrap.className='comp-content';
+      imgWrap.style.padding='0';imgWrap.style.overflow='hidden';imgWrap.style.borderRadius='8px';
+      const img=document.createElement('img');
+      img.src=c.content;
+      img.alt=c.title||'Comp';
+      img.style.cssText='width:100%;height:auto;display:block;border-radius:8px';
+      imgWrap.appendChild(img);
+      card.appendChild(imgWrap);
+    } else {
+      const content=document.createElement('div');
+      content.className='comp-content';
+      content.textContent=c.content;
+      card.appendChild(content);
+    }
 
     const actions=document.createElement('div');
     actions.className='comp-actions';
