@@ -4,234 +4,299 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Upward Bound Invitational — 3 Visual Concepts</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Oswald:wght@400;500;600;700&family=Montserrat:wght@400;600;700;800;900&family=Barlow+Condensed:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#111;display:flex;flex-direction:column;align-items:center;gap:30px;padding:60px 40px;font-family:'Inter Tight',sans-serif}
+body{background:#111;display:flex;flex-direction:column;align-items:center;gap:30px;padding:60px 40px;font-family:'Montserrat',sans-serif}
 .concept-label{
-  color:#E3FB61;font-size:14px;font-weight:800;letter-spacing:4px;
-  text-transform:uppercase;margin-top:40px;
+  color:#7BEA4D;font-size:14px;font-weight:800;letter-spacing:4px;
+  text-transform:uppercase;margin-top:50px;
 }
 .concept-desc{
   color:#666;font-size:13px;max-width:600px;text-align:center;margin-bottom:10px;
-  font-family:'DM Sans',sans-serif;line-height:1.6;
+  line-height:1.6;
 }
 
 /* ============================================
-   CONCEPT A — "BOLD BLOCK" 
-   Navy background, lime accents, centered power layout
+   CONCEPT A — "TOURNAMENT ENERGY"
+   Dark with electric green, bold condensed type, sport energy
    ============================================ */
 .concept-a{
   width:1080px;height:1080px;position:relative;overflow:hidden;
-  background:#141B3A;display:flex;flex-direction:column;
+  background:linear-gradient(160deg, #0a0a0a 0%, #1a2a0f 50%, #0a0a0a 100%);
 }
-.ca-top{
-  background:#E3FB61;padding:16px 50px;text-align:center;
-  font-weight:800;font-size:15px;letter-spacing:4px;text-transform:uppercase;color:#141B3A;
+.ca-bg-glow{
+  position:absolute;width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(123,234,77,.15) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
 }
-.ca-main{
-  flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
-  padding:40px 60px;text-align:center;
+.ca-content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding:50px}
+.ca-top-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:auto}
+.ca-badge{
+  background:#7BEA4D;color:#0a0a0a;font-family:'Oswald',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  padding:10px 20px;
 }
-.ca-annual{font-size:16px;font-weight:700;letter-spacing:5px;color:#B9E3EA;text-transform:uppercase;margin-bottom:20px}
-.ca-title{font-size:78px;font-weight:900;color:#fff;line-height:.95;text-transform:uppercase;letter-spacing:-2px;margin-bottom:10px}
-.ca-sub{font-size:40px;font-weight:900;color:#E3FB61;text-transform:uppercase;letter-spacing:3px;margin-bottom:40px}
-.ca-date-box{
-  background:#E3FB61;color:#141B3A;padding:22px 55px;border-radius:6px;margin-bottom:35px;
+.ca-annual{
+  font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;
+  color:rgba(255,255,255,.4);letter-spacing:4px;text-transform:uppercase;
 }
-.ca-date-box .d1{font-size:50px;font-weight:900;line-height:1}
-.ca-date-box .d2{font-size:20px;font-weight:700;letter-spacing:1px}
-.ca-stats{display:flex;gap:45px;margin-bottom:30px}
-.ca-stat .n{font-size:44px;font-weight:900;color:#E3FB61;line-height:1}
-.ca-stat .l{font-size:13px;font-weight:600;color:#B9E3EA;letter-spacing:2px;text-transform:uppercase;margin-top:5px}
-.ca-div-line{width:80px;height:3px;background:#D69BC6;margin:15px auto}
-.ca-divisions{font-size:15px;font-weight:600;color:rgba(255,255,255,.6);line-height:2;letter-spacing:1px}
-.ca-bottom{
-  background:rgba(255,255,255,.04);padding:20px 50px;
-  display:flex;justify-content:space-between;align-items:center;
-  border-top:1px solid rgba(255,255,255,.08);
+.ca-center{text-align:center;margin:auto 0}
+.ca-title{
+  font-family:'Bebas Neue',sans-serif;font-size:110px;color:#fff;
+  line-height:.85;letter-spacing:4px;text-transform:uppercase;
 }
-.ca-venue{font-size:13px;font-weight:700;color:#D69BC6;letter-spacing:2px;text-transform:uppercase}
-.ca-cause{font-size:12px;font-weight:500;color:rgba(255,255,255,.4)}
+.ca-invitational{
+  font-family:'Oswald',sans-serif;font-size:36px;font-weight:400;
+  color:#7BEA4D;letter-spacing:12px;text-transform:uppercase;margin-top:5px;
+}
+.ca-line{width:100%;height:2px;background:linear-gradient(90deg,transparent,#7BEA4D,transparent);margin:30px 0}
+.ca-details{
+  display:flex;justify-content:center;gap:50px;margin-top:10px;
+}
+.ca-detail{text-align:center}
+.ca-detail .val{font-family:'Bebas Neue',sans-serif;font-size:52px;color:#7BEA4D;line-height:1}
+.ca-detail .lbl{font-family:'Oswald',sans-serif;font-size:13px;color:rgba(255,255,255,.5);letter-spacing:3px;text-transform:uppercase;margin-top:4px}
+.ca-bottom{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end}
+.ca-date-stack{text-align:left}
+.ca-date-stack .dow{font-family:'Bebas Neue',sans-serif;font-size:42px;color:#fff;line-height:1}
+.ca-date-stack .full{font-family:'Oswald',sans-serif;font-size:18px;color:rgba(255,255,255,.5);letter-spacing:2px}
+.ca-venue-stack{text-align:right}
+.ca-venue-stack .name{font-family:'Oswald',sans-serif;font-size:16px;color:rgba(255,255,255,.5);letter-spacing:3px;text-transform:uppercase}
+.ca-venue-stack .loc{font-family:'Oswald',sans-serif;font-size:13px;color:rgba(255,255,255,.3);letter-spacing:2px}
+.ca-cause-bar{
+  position:absolute;bottom:0;left:0;right:0;background:#7BEA4D;
+  padding:12px;text-align:center;
+  font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;
+  color:#0a0a0a;letter-spacing:3px;text-transform:uppercase;
+}
 
 /* ============================================
-   CONCEPT B — "SPLIT"
-   Left navy, right lime panel, asymmetric energy
+   CONCEPT B — "CLEAN SPORT"
+   White background, green/black, modern athletic poster
    ============================================ */
 .concept-b{
   width:1080px;height:1080px;position:relative;overflow:hidden;
-  background:#141B3A;display:flex;
+  background:#f5f5f0;
 }
-.cb-left{
-  flex:1;display:flex;flex-direction:column;justify-content:center;
-  padding:60px 55px;
+.cb-green-bar{position:absolute;top:0;left:0;right:0;height:200px;background:#2D5016}
+.cb-content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding:50px 55px}
+.cb-top{color:#fff;margin-bottom:30px}
+.cb-fundraiser-tag{
+  font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:4px;text-transform:uppercase;opacity:.7;margin-bottom:12px;
 }
-.cb-tag{
-  display:inline-block;background:#D69BC6;color:#141B3A;
-  font-size:12px;font-weight:800;letter-spacing:3px;text-transform:uppercase;
-  padding:8px 16px;border-radius:4px;margin-bottom:30px;align-self:flex-start;
+.cb-title-row{display:flex;align-items:baseline;gap:15px}
+.cb-title-row h1{
+  font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:1;
+  letter-spacing:3px;
 }
-.cb-title{font-size:64px;font-weight:900;color:#fff;line-height:.95;text-transform:uppercase;letter-spacing:-2px;margin-bottom:10px}
-.cb-sub{font-size:32px;font-weight:900;color:#E3FB61;text-transform:uppercase;letter-spacing:2px;margin-bottom:35px}
-.cb-info{font-size:16px;color:rgba(255,255,255,.55);line-height:2.2;font-weight:500}
-.cb-info strong{color:#B9E3EA}
-.cb-right{
-  width:360px;background:#E3FB61;display:flex;flex-direction:column;
-  justify-content:center;align-items:center;padding:50px 35px;text-align:center;
+.cb-title-row .inv{
+  font-family:'Montserrat',sans-serif;font-size:18px;font-weight:700;
+  letter-spacing:5px;text-transform:uppercase;opacity:.6;
 }
-.cb-month{font-size:24px;font-weight:800;color:#141B3A;letter-spacing:4px;text-transform:uppercase}
-.cb-day-num{font-size:140px;font-weight:900;color:#141B3A;line-height:.85}
-.cb-dow{font-size:22px;font-weight:800;color:#141B3A;letter-spacing:3px;text-transform:uppercase;margin-bottom:30px}
-.cb-schedule{font-size:13px;font-weight:600;color:rgba(20,27,58,.6);line-height:2.4;text-align:left}
-.cb-schedule strong{color:#141B3A}
-.cb-venue-tag{
-  margin-top:30px;font-size:12px;font-weight:800;color:#141B3A;
-  letter-spacing:3px;text-transform:uppercase;
-  border-top:2px solid rgba(20,27,58,.15);padding-top:20px;width:100%;
+.cb-card{
+  background:#fff;border-radius:12px;padding:45px 50px;
+  box-shadow:0 4px 30px rgba(0,0,0,.08);flex:1;
+  display:flex;flex-direction:column;justify-content:center;
 }
+.cb-date-big{
+  font-family:'Bebas Neue',sans-serif;font-size:90px;color:#2D5016;
+  line-height:.9;margin-bottom:5px;
+}
+.cb-date-sub{
+  font-family:'Montserrat',sans-serif;font-size:16px;font-weight:700;
+  color:#888;letter-spacing:2px;text-transform:uppercase;margin-bottom:30px;
+}
+.cb-schedule-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;
+  background:#e8e8e3;border-radius:8px;overflow:hidden;margin-bottom:30px;
+}
+.cb-sched-cell{background:#fff;padding:22px 15px;text-align:center}
+.cb-sched-cell .time{font-family:'Montserrat',sans-serif;font-size:12px;font-weight:700;color:#2D5016;letter-spacing:1px;margin-bottom:6px}
+.cb-sched-cell .div-name{font-family:'Bebas Neue',sans-serif;font-size:36px;color:#1a1a1a;line-height:1}
+.cb-sched-cell .levels{font-size:11px;color:#999;margin-top:4px;font-weight:500}
+.cb-bottom-row{display:flex;justify-content:space-between;align-items:center}
+.cb-price{
+  font-family:'Bebas Neue',sans-serif;font-size:48px;color:#2D5016;
+}
+.cb-price span{font-family:'Montserrat',sans-serif;font-size:14px;color:#888;font-weight:600;vertical-align:middle}
+.cb-guarantee{
+  background:#2D5016;color:#fff;font-family:'Montserrat',sans-serif;
+  font-size:13px;font-weight:700;padding:12px 24px;border-radius:6px;
+  letter-spacing:2px;text-transform:uppercase;
+}
+.cb-footer{
+  margin-top:auto;padding-top:15px;display:flex;justify-content:space-between;
+  align-items:center;
+}
+.cb-venue{font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#aaa;letter-spacing:2px;text-transform:uppercase}
+.cb-cause{font-family:'Montserrat',sans-serif;font-size:11px;color:#bbb;text-align:right;max-width:300px;line-height:1.4}
 
 /* ============================================
-   CONCEPT C — "CREAM EDITORIAL"
-   Light background, navy/pink typography, editorial feel
+   CONCEPT C — "GAME DAY"
+   Split diagonal, tournament bracket energy, black/green
    ============================================ */
 .concept-c{
   width:1080px;height:1080px;position:relative;overflow:hidden;
-  background:#FCFAF1;display:flex;flex-direction:column;
+  background:#0a0a0a;
 }
-.cc-accent{height:8px;background:#141B3A}
-.cc-main{
-  flex:1;display:flex;flex-direction:column;justify-content:center;
-  align-items:center;padding:60px 80px;text-align:center;
+.cc-diagonal{
+  position:absolute;top:0;right:0;width:55%;height:100%;
+  background:#7BEA4D;clip-path:polygon(15% 0,100% 0,100% 100%,0% 100%);
 }
-.cc-fundraiser{
-  font-size:14px;font-weight:700;letter-spacing:5px;text-transform:uppercase;
-  color:#D69BC6;margin-bottom:30px;
+.cc-content{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;padding:55px 50px}
+.cc-tag{
+  font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
+  color:#7BEA4D;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;
 }
 .cc-title{
-  font-size:80px;font-weight:900;color:#141B3A;line-height:.92;
-  text-transform:uppercase;letter-spacing:-3px;margin-bottom:8px;
+  font-family:'Bebas Neue',sans-serif;font-size:100px;color:#fff;
+  line-height:.85;letter-spacing:3px;max-width:550px;
 }
-.cc-sub{
-  font-size:38px;font-weight:900;color:#D69BC6;text-transform:uppercase;
-  letter-spacing:3px;margin-bottom:40px;
+.cc-inv{
+  font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:400;
+  color:rgba(255,255,255,.5);letter-spacing:8px;text-transform:uppercase;
+  margin-top:5px;margin-bottom:auto;
 }
-.cc-rule{width:60px;height:3px;background:#141B3A;margin:0 auto 35px}
-.cc-date{font-size:22px;font-weight:700;color:#141B3A;margin-bottom:8px;letter-spacing:1px}
-.cc-location{font-size:15px;font-weight:500;color:#888;margin-bottom:35px;letter-spacing:1px}
-.cc-grid{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:0;
-  border:2px solid #141B3A;border-radius:8px;overflow:hidden;
-  width:100%;max-width:700px;margin-bottom:35px;
+.cc-mid{display:flex;gap:30px;margin-bottom:auto}
+.cc-info-block{
+  background:rgba(255,255,255,.08);border-radius:8px;padding:25px 30px;
+  backdrop-filter:blur(5px);min-width:200px;
 }
-.cc-cell{
-  padding:22px 10px;text-align:center;
-  border-right:1px solid rgba(20,27,58,.15);
-  border-bottom:1px solid rgba(20,27,58,.15);
+.cc-info-block .num{font-family:'Bebas Neue',sans-serif;font-size:48px;color:#7BEA4D;line-height:1}
+.cc-info-block .txt{font-family:'Barlow Condensed',sans-serif;font-size:14px;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.cc-bottom-area{display:flex;justify-content:space-between;align-items:flex-end}
+.cc-date-col .big{font-family:'Bebas Neue',sans-serif;font-size:64px;color:#fff;line-height:1}
+.cc-date-col .sub{font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,.4);letter-spacing:2px;text-transform:uppercase}
+.cc-right-info{text-align:right}
+.cc-right-info .sched{
+  font-family:'Barlow Condensed',sans-serif;font-size:14px;
+  color:rgba(10,10,10,.7);line-height:2.2;font-weight:600;
 }
-.cc-cell:nth-child(3n){border-right:none}
-.cc-cell:nth-child(n+4){border-bottom:none}
-.cc-cell .t{font-size:12px;font-weight:700;color:#D69BC6;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
-.cc-cell .v{font-size:28px;font-weight:900;color:#141B3A}
-.cc-cell .s{font-size:11px;font-weight:500;color:#888;margin-top:2px}
-.cc-divisions{
-  font-size:15px;font-weight:600;color:rgba(20,27,58,.5);letter-spacing:1px;line-height:1.8;
+.cc-right-info .vn{
+  font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;
+  color:rgba(10,10,10,.9);letter-spacing:3px;text-transform:uppercase;margin-top:15px;
 }
-.cc-bottom{
-  background:#141B3A;padding:22px 50px;display:flex;
-  justify-content:space-between;align-items:center;
+.cc-cause-strip{
+  position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.6);
+  padding:14px 50px;text-align:center;z-index:2;
+  font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;
+  color:rgba(255,255,255,.5);letter-spacing:3px;text-transform:uppercase;
 }
-.cc-b-venue{font-size:13px;font-weight:700;color:#E3FB61;letter-spacing:2px;text-transform:uppercase}
-.cc-b-cause{font-size:12px;font-weight:500;color:rgba(255,255,255,.4)}
 </style>
 </head>
 <body>
 
 <!-- CONCEPT A -->
-<p class="concept-label">Concept A — Bold Block</p>
-<p class="concept-desc">Dark, centered, high-impact. Lime date block anchors the eye. Tournament energy.</p>
+<p class="concept-label">Concept A — Tournament Energy</p>
+<p class="concept-desc">Dark, electric green glow, condensed type. Feels like a fight poster.</p>
 <div class="concept-a">
-  <div class="ca-top">Pickleball Fundraiser · All Proceeds Benefit CSU Upward Bound</div>
-  <div class="ca-main">
-    <div class="ca-annual">2nd Annual</div>
-    <div class="ca-title">Upward Bound</div>
-    <div class="ca-sub">Invitational</div>
-    <div class="ca-date-box">
-      <div class="d1">Sunday</div>
-      <div class="d2">April 19, 2026</div>
+  <div class="ca-bg-glow"></div>
+  <div class="ca-content">
+    <div class="ca-top-row">
+      <div class="ca-badge">Charity Tournament</div>
+      <div class="ca-annual">2nd Annual</div>
     </div>
-    <div class="ca-stats">
-      <div class="ca-stat"><div class="n">9</div><div class="l">Divisions</div></div>
-      <div class="ca-stat"><div class="n">6</div><div class="l">Game Guarantee</div></div>
-      <div class="ca-stat"><div class="n">$50</div><div class="l">Per Person</div></div>
+    <div class="ca-center">
+      <div class="ca-title">Upward<br>Bound</div>
+      <div class="ca-invitational">Invitational</div>
+      <div class="ca-line"></div>
+      <div class="ca-details">
+        <div class="ca-detail"><div class="val">9</div><div class="lbl">Divisions</div></div>
+        <div class="ca-detail"><div class="val">6</div><div class="lbl">Game Guarantee</div></div>
+        <div class="ca-detail"><div class="val">$50</div><div class="lbl">Per Person</div></div>
+      </div>
     </div>
-    <div class="ca-div-line"></div>
-    <div class="ca-divisions">
-      Men's · Women's · Mixed<br>
-      Beginner · Intermediate · Advanced
+    <div class="ca-bottom">
+      <div class="ca-date-stack">
+        <div class="dow">Sunday</div>
+        <div class="full">April 19, 2026</div>
+      </div>
+      <div class="ca-venue-stack">
+        <div class="name">Zero Zero Two</div>
+        <div class="loc">Fort Collins, CO</div>
+      </div>
     </div>
   </div>
-  <div class="ca-bottom">
-    <span class="ca-venue">Zero Zero Two · Fort Collins</span>
-    <span class="ca-cause">100% of proceeds support first-generation college students</span>
-  </div>
+  <div class="ca-cause-bar">All proceeds support first-generation college students through CSU Upward Bound</div>
 </div>
 
 <!-- CONCEPT B -->
-<p class="concept-label">Concept B — Split Panel</p>
-<p class="concept-desc">Asymmetric split. Info on the left, bold date panel on the right. Dynamic, modern.</p>
+<p class="concept-label">Concept B — Clean Sport</p>
+<p class="concept-desc">White card on forest green. Modern athletic poster. Schedule grid front and center.</p>
 <div class="concept-b">
-  <div class="cb-left">
-    <span class="cb-tag">Charity Tournament</span>
-    <div class="cb-title">Upward<br>Bound</div>
-    <div class="cb-sub">Invitational</div>
-    <div class="cb-info">
-      <strong>9 Divisions</strong> · All Skill Levels<br>
-      <strong>6-Game Guarantee</strong><br>
-      <strong>$50</strong> Per Person Per Event<br>
-      All proceeds benefit <strong>CSU Upward Bound</strong>
+  <div class="cb-green-bar"></div>
+  <div class="cb-content">
+    <div class="cb-top">
+      <div class="cb-fundraiser-tag">Pickleball Fundraiser</div>
+      <div class="cb-title-row">
+        <h1>UPWARD BOUND</h1>
+        <span class="inv">Invitational</span>
+      </div>
     </div>
-  </div>
-  <div class="cb-right">
-    <div class="cb-month">April</div>
-    <div class="cb-day-num">19</div>
-    <div class="cb-dow">Sunday</div>
-    <div class="cb-schedule">
-      <strong>8 – 11 AM</strong> Men's Divisions<br>
-      <strong>11 AM – 2 PM</strong> Mixed Divisions<br>
-      <strong>2 – 5 PM</strong> Women's Divisions
+    <div class="cb-card">
+      <div class="cb-date-big">APRIL 19</div>
+      <div class="cb-date-sub">Sunday · Fort Collins, CO</div>
+      <div class="cb-schedule-grid">
+        <div class="cb-sched-cell">
+          <div class="time">8 – 11 AM</div>
+          <div class="div-name">MEN'S</div>
+          <div class="levels">Beg · Int · Adv</div>
+        </div>
+        <div class="cb-sched-cell">
+          <div class="time">11 AM – 2 PM</div>
+          <div class="div-name">MIXED</div>
+          <div class="levels">Beg · Int · Adv</div>
+        </div>
+        <div class="cb-sched-cell">
+          <div class="time">2 – 5 PM</div>
+          <div class="div-name">WOMEN'S</div>
+          <div class="levels">Beg · Int · Adv</div>
+        </div>
+      </div>
+      <div class="cb-bottom-row">
+        <div class="cb-price">$50 <span>/ person / event</span></div>
+        <div class="cb-guarantee">6-Game Guarantee</div>
+      </div>
     </div>
-    <div class="cb-venue-tag">Zero Zero Two<br>Fort Collins, CO</div>
+    <div class="cb-footer">
+      <span class="cb-venue">@ Zero Zero Two</span>
+      <span class="cb-cause">All proceeds benefit CSU Upward Bound — supporting first-generation college students</span>
+    </div>
   </div>
 </div>
 
 <!-- CONCEPT C -->
-<p class="concept-label">Concept C — Cream Editorial</p>
-<p class="concept-desc">Light, clean, editorial. Grid layout for details. Softer energy, premium feel.</p>
+<p class="concept-label">Concept C — Game Day</p>
+<p class="concept-desc">Diagonal split, black and electric green. Bold, dynamic, tournament bracket energy.</p>
 <div class="concept-c">
-  <div class="cc-accent"></div>
-  <div class="cc-main">
-    <div class="cc-fundraiser">Pickleball Fundraiser</div>
-    <div class="cc-title">Upward Bound</div>
-    <div class="cc-sub">Invitational</div>
-    <div class="cc-rule"></div>
-    <div class="cc-date">Sunday, April 19, 2026</div>
-    <div class="cc-location">Zero Zero Two · 4401 Innovation Drive · Fort Collins, CO</div>
-    <div class="cc-grid">
-      <div class="cc-cell"><div class="t">Morning</div><div class="v">Men's</div><div class="s">8 – 11 AM</div></div>
-      <div class="cc-cell"><div class="t">Midday</div><div class="v">Mixed</div><div class="s">11 AM – 2 PM</div></div>
-      <div class="cc-cell"><div class="t">Afternoon</div><div class="v">Women's</div><div class="s">2 – 5 PM</div></div>
-      <div class="cc-cell"><div class="t">Divisions</div><div class="v">9</div><div class="s">All Levels</div></div>
-      <div class="cc-cell"><div class="t">Games</div><div class="v">6</div><div class="s">Guaranteed</div></div>
-      <div class="cc-cell"><div class="t">Entry</div><div class="v">$50</div><div class="s">Per Person</div></div>
+  <div class="cc-diagonal"></div>
+  <div class="cc-content">
+    <div class="cc-tag">2nd Annual · Charity Tournament</div>
+    <div class="cc-title">Upward<br>Bound</div>
+    <div class="cc-inv">Invitational</div>
+    <div class="cc-mid">
+      <div class="cc-info-block"><div class="num">9</div><div class="txt">Divisions</div></div>
+      <div class="cc-info-block"><div class="num">6</div><div class="txt">Game Guarantee</div></div>
+      <div class="cc-info-block"><div class="num">$50</div><div class="txt">Per Person</div></div>
     </div>
-    <div class="cc-divisions">
-      Beginner · Intermediate · Advanced
+    <div class="cc-bottom-area">
+      <div class="cc-date-col">
+        <div class="big">April 19</div>
+        <div class="sub">Sunday · 8 AM – 5 PM</div>
+      </div>
+      <div class="cc-right-info">
+        <div class="sched">
+          8 – 11 AM · Men's<br>
+          11 AM – 2 PM · Mixed<br>
+          2 – 5 PM · Women's
+        </div>
+        <div class="vn">Zero Zero Two · Fort Collins</div>
+      </div>
     </div>
   </div>
-  <div class="cc-bottom">
-    <span class="cc-b-venue">Zero Zero Two</span>
-    <span class="cc-b-cause">All proceeds support first-generation college students through CSU Upward Bound</span>
-  </div>
+  <div class="cc-cause-strip">All proceeds support first-generation college students through CSU Upward Bound</div>
 </div>
 
 </body>
