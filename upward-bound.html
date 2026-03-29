@@ -20,6 +20,12 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;gap:3
 }
 .ub .z{position:relative;z-index:1}
 
+/* Pickleball SVG accent — used on social formats only */
+.pb-ball{
+  position:absolute;z-index:0;opacity:.12;
+}
+.pb-ball svg{width:100%;height:100%}
+
 /* ===== SQUARE 1080x1080 ===== */
 .sq{width:1080px;height:1080px}
 .sq .z{height:100%;display:flex;flex-direction:column;padding:50px}
@@ -77,11 +83,8 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;gap:3
 .pp{width:1200px;height:630px}
 .pp .glow{width:500px;height:500px}
 .pp .z{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 50px}
-.pp .title{font-family:'Bebas Neue',sans-serif;font-size:100px;color:#fff;line-height:.85;letter-spacing:4px}
-.pp .inv{font-family:'Oswald',sans-serif;font-size:30px;font-weight:400;color:#7BEA4D;letter-spacing:12px;text-transform:uppercase;margin-top:6px;margin-bottom:28px}
-.pp .line{width:50%;height:2px;background:linear-gradient(90deg,transparent,#7BEA4D,transparent);margin-bottom:28px}
-.pp .stats{font-family:'Oswald',sans-serif;font-size:22px;color:rgba(255,255,255,.5);letter-spacing:3px;line-height:1.8}
-.pp .stats strong{color:#7BEA4D}
+.pp .title{font-family:'Bebas Neue',sans-serif;font-size:160px;color:#fff;line-height:.85;letter-spacing:6px}
+.pp .inv{font-family:'Oswald',sans-serif;font-size:42px;font-weight:400;color:#7BEA4D;letter-spacing:16px;text-transform:uppercase;margin-top:10px}
 </style>
 </head>
 <body>
@@ -93,16 +96,15 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;gap:3
   <div class="z">
     <div class="title">Upward<br>Bound</div>
     <div class="inv">Invitational</div>
-    <div class="line"></div>
-    <div class="stats">
-      <strong>9 Divisions</strong> · <strong>6-Game Guarantee</strong> · <strong>$50</strong>/Person
-    </div>
   </div>
 </div>
 
 <p class="label">Square — 1080×1080 (Instagram Feed)</p>
 <div class="ub sq">
   <div class="glow"></div>
+  <div class="pb-ball" style="width:550px;height:550px;bottom:-120px;right:-100px">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="98" fill="none" stroke="#7BEA4D" stroke-width="3"/><circle cx="60" cy="55" r="8" fill="#7BEA4D"/><circle cx="100" cy="40" r="8" fill="#7BEA4D"/><circle cx="140" cy="55" r="8" fill="#7BEA4D"/><circle cx="45" cy="90" r="8" fill="#7BEA4D"/><circle cx="80" cy="85" r="8" fill="#7BEA4D"/><circle cx="120" cy="85" r="8" fill="#7BEA4D"/><circle cx="155" cy="90" r="8" fill="#7BEA4D"/><circle cx="60" cy="120" r="8" fill="#7BEA4D"/><circle cx="100" cy="115" r="8" fill="#7BEA4D"/><circle cx="140" cy="120" r="8" fill="#7BEA4D"/><circle cx="75" cy="150" r="8" fill="#7BEA4D"/><circle cx="125" cy="150" r="8" fill="#7BEA4D"/><circle cx="100" cy="170" r="8" fill="#7BEA4D"/></svg>
+  </div>
   <div class="z">
     <div class="top-row">
       <div class="badge">Charity Tournament</div>
@@ -129,6 +131,9 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;gap:3
 <p class="label">Landscape — 1200×628 (Facebook / LinkedIn)</p>
 <div class="ub ls">
   <div class="glow"></div>
+  <div class="pb-ball" style="width:400px;height:400px;bottom:-80px;right:220px">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="98" fill="none" stroke="#7BEA4D" stroke-width="3"/><circle cx="60" cy="55" r="8" fill="#7BEA4D"/><circle cx="100" cy="40" r="8" fill="#7BEA4D"/><circle cx="140" cy="55" r="8" fill="#7BEA4D"/><circle cx="45" cy="90" r="8" fill="#7BEA4D"/><circle cx="80" cy="85" r="8" fill="#7BEA4D"/><circle cx="120" cy="85" r="8" fill="#7BEA4D"/><circle cx="155" cy="90" r="8" fill="#7BEA4D"/><circle cx="60" cy="120" r="8" fill="#7BEA4D"/><circle cx="100" cy="115" r="8" fill="#7BEA4D"/><circle cx="140" cy="120" r="8" fill="#7BEA4D"/><circle cx="75" cy="150" r="8" fill="#7BEA4D"/><circle cx="125" cy="150" r="8" fill="#7BEA4D"/><circle cx="100" cy="170" r="8" fill="#7BEA4D"/></svg>
+  </div>
   <div class="z">
     <div class="left">
       <div class="tag">Charity Tournament</div>
@@ -158,6 +163,12 @@ body{background:#111;display:flex;flex-direction:column;align-items:center;gap:3
 <p class="label">Story — 1080×1920 (Instagram / Facebook Story)</p>
 <div class="ub st">
   <div class="glow"></div>
+  <div class="pb-ball" style="width:700px;height:700px;top:-150px;right:-200px">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="98" fill="none" stroke="#7BEA4D" stroke-width="3"/><circle cx="60" cy="55" r="8" fill="#7BEA4D"/><circle cx="100" cy="40" r="8" fill="#7BEA4D"/><circle cx="140" cy="55" r="8" fill="#7BEA4D"/><circle cx="45" cy="90" r="8" fill="#7BEA4D"/><circle cx="80" cy="85" r="8" fill="#7BEA4D"/><circle cx="120" cy="85" r="8" fill="#7BEA4D"/><circle cx="155" cy="90" r="8" fill="#7BEA4D"/><circle cx="60" cy="120" r="8" fill="#7BEA4D"/><circle cx="100" cy="115" r="8" fill="#7BEA4D"/><circle cx="140" cy="120" r="8" fill="#7BEA4D"/><circle cx="75" cy="150" r="8" fill="#7BEA4D"/><circle cx="125" cy="150" r="8" fill="#7BEA4D"/><circle cx="100" cy="170" r="8" fill="#7BEA4D"/></svg>
+  </div>
+  <div class="pb-ball" style="width:400px;height:400px;bottom:-100px;left:-100px;opacity:.07">
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><circle cx="100" cy="100" r="98" fill="none" stroke="#7BEA4D" stroke-width="3"/><circle cx="60" cy="55" r="8" fill="#7BEA4D"/><circle cx="100" cy="40" r="8" fill="#7BEA4D"/><circle cx="140" cy="55" r="8" fill="#7BEA4D"/><circle cx="45" cy="90" r="8" fill="#7BEA4D"/><circle cx="80" cy="85" r="8" fill="#7BEA4D"/><circle cx="120" cy="85" r="8" fill="#7BEA4D"/><circle cx="155" cy="90" r="8" fill="#7BEA4D"/><circle cx="60" cy="120" r="8" fill="#7BEA4D"/><circle cx="100" cy="115" r="8" fill="#7BEA4D"/><circle cx="140" cy="120" r="8" fill="#7BEA4D"/><circle cx="75" cy="150" r="8" fill="#7BEA4D"/><circle cx="125" cy="150" r="8" fill="#7BEA4D"/><circle cx="100" cy="170" r="8" fill="#7BEA4D"/></svg>
+  </div>
   <div class="z">
     <div class="tag">Charity Tournament</div>
     <div class="title">Upward<br>Bound</div>
