@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upward Bound Invitational — Visual</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#1a1a2e;display:flex;flex-direction:column;align-items:center;gap:60px;padding:60px 40px;font-family:'Inter Tight',sans-serif}
+
+.label{color:#888;font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:-40px}
+
+/* ===== SQUARE (1080x1080 Instagram Feed) ===== */
+.square{
+  width:1080px;height:1080px;position:relative;overflow:hidden;
+  background:#141B3A;display:flex;flex-direction:column;
+}
+.square .top-bar{
+  background:#E3FB61;padding:18px 50px;
+  font-weight:900;font-size:18px;letter-spacing:3px;text-transform:uppercase;color:#141B3A;
+  text-align:center;
+}
+.square .main{
+  flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:50px 60px;text-align:center;
+}
+.square .event-label{
+  font-size:16px;font-weight:700;letter-spacing:4px;text-transform:uppercase;
+  color:#B9E3EA;margin-bottom:20px;
+}
+.square .event-title{
+  font-size:72px;font-weight:900;line-height:1;color:#fff;margin-bottom:8px;
+  text-transform:uppercase;letter-spacing:-1px;
+}
+.square .event-subtitle{
+  font-size:36px;font-weight:900;color:#E3FB61;text-transform:uppercase;
+  letter-spacing:2px;margin-bottom:40px;
+}
+.square .detail-row{
+  display:flex;gap:40px;margin-bottom:30px;
+}
+.square .detail-box{
+  text-align:center;
+}
+.square .detail-box .num{
+  font-size:42px;font-weight:900;color:#E3FB61;line-height:1;
+}
+.square .detail-box .label-text{
+  font-size:14px;font-weight:600;color:#B9E3EA;letter-spacing:2px;text-transform:uppercase;margin-top:6px;
+}
+.square .date-block{
+  background:#E3FB61;color:#141B3A;padding:20px 50px;border-radius:6px;
+  margin-bottom:30px;
+}
+.square .date-block .day{
+  font-size:48px;font-weight:900;line-height:1;
+}
+.square .date-block .date{
+  font-size:20px;font-weight:700;letter-spacing:1px;
+}
+.square .divider{
+  width:80px;height:3px;background:#D69BC6;margin:20px auto;
+}
+.square .divisions{
+  font-size:16px;font-weight:600;color:rgba(255,255,255,.7);line-height:2;
+  letter-spacing:1px;
+}
+.square .bottom-bar{
+  background:#141B3A;border-top:2px solid rgba(255,255,255,.1);
+  padding:22px 50px;display:flex;justify-content:space-between;align-items:center;
+}
+.square .venue{font-size:14px;font-weight:700;color:#D69BC6;letter-spacing:2px;text-transform:uppercase}
+.square .cause{font-size:13px;font-weight:600;color:rgba(255,255,255,.5)}
+
+/* ===== LANDSCAPE (1200x628 Facebook/LinkedIn) ===== */
+.landscape{
+  width:1200px;height:628px;position:relative;overflow:hidden;
+  background:#141B3A;display:flex;
+}
+.landscape .left{
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  padding:50px 60px;
+}
+.landscape .left .top-tag{
+  background:#E3FB61;color:#141B3A;font-size:13px;font-weight:800;
+  letter-spacing:3px;text-transform:uppercase;padding:8px 16px;
+  display:inline-block;border-radius:4px;margin-bottom:24px;
+}
+.landscape .left h1{
+  font-size:56px;font-weight:900;color:#fff;line-height:1.05;
+  text-transform:uppercase;margin-bottom:12px;letter-spacing:-1px;
+}
+.landscape .left .sub{
+  font-size:28px;font-weight:800;color:#E3FB61;text-transform:uppercase;
+  letter-spacing:2px;margin-bottom:28px;
+}
+.landscape .left .info{
+  font-size:16px;color:rgba(255,255,255,.6);line-height:1.8;font-weight:500;
+}
+.landscape .left .info strong{color:#B9E3EA}
+.landscape .right{
+  width:380px;background:#E3FB61;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;padding:40px;text-align:center;
+}
+.landscape .right .big-date{
+  font-size:80px;font-weight:900;color:#141B3A;line-height:1;
+}
+.landscape .right .month{
+  font-size:28px;font-weight:800;color:#141B3A;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:20px;
+}
+.landscape .right .time-slots{
+  font-size:14px;font-weight:600;color:#141B3A;line-height:2;
+  opacity:.7;
+}
+.landscape .right .venue-name{
+  margin-top:24px;font-size:14px;font-weight:800;color:#141B3A;
+  letter-spacing:2px;text-transform:uppercase;
+  border-top:2px solid rgba(20,27,58,.2);padding-top:16px;
+}
+
+/* ===== STORY (1080x1920 Instagram Story) ===== */
+.story{
+  width:1080px;height:1920px;position:relative;overflow:hidden;
+  background:#141B3A;display:flex;flex-direction:column;
+}
+.story .top-accent{
+  background:#E3FB61;height:8px;
+}
+.story .content{
+  flex:1;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;padding:80px 70px;text-align:center;
+}
+.story .tag{
+  background:#E3FB61;color:#141B3A;font-size:16px;font-weight:800;
+  letter-spacing:4px;text-transform:uppercase;padding:12px 24px;
+  border-radius:6px;margin-bottom:50px;
+}
+.story h1{
+  font-size:90px;font-weight:900;color:#fff;line-height:1;
+  text-transform:uppercase;margin-bottom:16px;letter-spacing:-2px;
+}
+.story .sub{
+  font-size:44px;font-weight:900;color:#E3FB61;text-transform:uppercase;
+  letter-spacing:3px;margin-bottom:60px;
+}
+.story .date-big{
+  font-size:120px;font-weight:900;color:#E3FB61;line-height:1;
+}
+.story .date-month{
+  font-size:36px;font-weight:800;color:#B9E3EA;letter-spacing:4px;
+  text-transform:uppercase;margin-bottom:50px;
+}
+.story .detail-line{
+  font-size:22px;font-weight:600;color:rgba(255,255,255,.6);
+  line-height:2.2;letter-spacing:1px;
+}
+.story .detail-line strong{color:#fff}
+.story .cta{
+  background:#E3FB61;color:#141B3A;font-size:22px;font-weight:800;
+  padding:20px 50px;border-radius:50px;margin-top:50px;
+  letter-spacing:2px;text-transform:uppercase;
+}
+.story .bottom-strip{
+  background:rgba(255,255,255,.05);padding:30px;text-align:center;
+}
+.story .bottom-strip span{
+  font-size:15px;font-weight:700;color:#D69BC6;letter-spacing:3px;text-transform:uppercase;
+}
+</style>
+</head>
+<body>
+
+<p class="label">Square — 1080×1080 (Instagram Feed)</p>
+<div class="square">
+  <div class="top-bar">Pickleball Fundraiser · All Proceeds Benefit CSU Upward Bound</div>
+  <div class="main">
+    <div class="event-label">2nd Annual</div>
+    <div class="event-title">Upward Bound</div>
+    <div class="event-subtitle">Invitational</div>
+    <div class="date-block">
+      <div class="day">Sunday</div>
+      <div class="date">April 19, 2026</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-box">
+        <div class="num">9</div>
+        <div class="label-text">Divisions</div>
+      </div>
+      <div class="detail-box">
+        <div class="num">6</div>
+        <div class="label-text">Game Guarantee</div>
+      </div>
+      <div class="detail-box">
+        <div class="num">$50</div>
+        <div class="label-text">Per Person</div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="divisions">
+      Men's · Women's · Mixed<br>
+      Beginner · Intermediate · Advanced
+    </div>
+  </div>
+  <div class="bottom-bar">
+    <span class="venue">Zero Zero Two · Fort Collins</span>
+    <span class="cause">100% of proceeds support first-generation college students</span>
+  </div>
+</div>
+
+<p class="label">Landscape — 1200×628 (Facebook / LinkedIn)</p>
+<div class="landscape">
+  <div class="left">
+    <span class="top-tag">Pickleball Fundraiser</span>
+    <h1>Upward Bound<br>Invitational</h1>
+    <div class="sub">2nd Annual</div>
+    <div class="info">
+      <strong>9 Divisions</strong> · Men's · Women's · Mixed<br>
+      <strong>6-Game Guarantee</strong> · $50 per person<br>
+      All proceeds benefit <strong>CSU Upward Bound</strong>
+    </div>
+  </div>
+  <div class="right">
+    <div class="month">April</div>
+    <div class="big-date">19</div>
+    <div class="month">Sunday</div>
+    <div class="time-slots">
+      8–11 AM · Men's<br>
+      11 AM–2 PM · Mixed<br>
+      2–5 PM · Women's
+    </div>
+    <div class="venue-name">Zero Zero Two<br>Fort Collins, CO</div>
+  </div>
+</div>
+
+<p class="label">Story — 1080×1920 (Instagram / Facebook Story)</p>
+<div class="story">
+  <div class="top-accent"></div>
+  <div class="content">
+    <div class="tag">Pickleball Fundraiser</div>
+    <h1>Upward Bound</h1>
+    <div class="sub">Invitational</div>
+    <div class="date-big">19</div>
+    <div class="date-month">April 2026 · Sunday</div>
+    <div class="detail-line">
+      <strong>9 Divisions</strong> · All Skill Levels<br>
+      <strong>6-Game Guarantee</strong><br>
+      <strong>$50</strong> Per Person Per Event<br>
+      Men's · Women's · Mixed
+    </div>
+    <div class="cta">Register Now</div>
+  </div>
+  <div class="bottom-strip">
+    <span>Zero Zero Two · Fort Collins, CO</span>
+  </div>
+</div>
+
+</body>
+</html>
