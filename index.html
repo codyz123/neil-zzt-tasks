@@ -272,6 +272,11 @@ function effectivePriority(t) {
   return 'low'; // dated work stays low until it enters the 2-day window
 }
 
+function isReminder(t) {
+  const tags = Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : [];
+  return tags.includes('reminder');
+}
+
 function priorityScore(t) {
   return PRIO_ORDER[effectivePriority(t)] ?? 99;
 }
@@ -408,7 +413,7 @@ function renderTaskItem(t) {
   else if (t.due_date) dueLabel = `<span class="task-due">Due ${t.due_date}</span>`;
   
   const effPriority = effectivePriority(t);
-  const type = t.source === 'reminder' ? 'reminder' : 'task';
+  const type = isReminder(t) ? 'reminder' : 'task';
 
   return `
     <li class="task-item">
@@ -440,8 +445,8 @@ function renderContent() {
   }
 
   if (currentView === 'today') {
-    const reminders = tasks.filter(t => t.source === 'reminder');
-    const work = tasks.filter(t => t.source !== 'reminder');
+    const reminders = tasks.filter(t => isReminder(t));
+    const work = tasks.filter(t => !isReminder(t));
 
     let html = '';
     html += renderSection('🎯 Today — Tasks', work);
@@ -536,8 +541,8 @@ function openDetail(id) {
       <div class="detail-field"><label>Category</label><div class="val"><span class="tag tag-cat">${t.category}</span></div></div>
       <div class="detail-field"><label>Type</label>
         <select onchange="updateType('${t.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;">
-          <option value="task" ${t.source==='reminder'?'':'selected'}>task</option>
-          <option value="reminder" ${t.source==='reminder'?'selected':''}>reminder</option>
+          <option value="task" ${isReminder(t)?'':'selected'}>task</option>
+          <option value="reminder" ${isReminder(t)?'selected':''}>reminder</option>
         </select>
       </div>
     </div>
@@ -568,8 +573,11 @@ function closeDetail() {
 }
 
 async function updateType(id, typeValue) {
-  const source = typeValue === 'reminder' ? 'reminder' : 'manual';
-  await updateField(id, 'source', source);
+  const t = allTasks.find(x => x.id === id) || {};
+  let tags = Array.isArray(t.tags) ? [...t.tags] : [];
+  tags = tags.filter(x => String(x).toLowerCase() !== 'reminder');
+  if (typeValue === 'reminder') tags.push('reminder');
+  await updateField(id, 'tags', tags.length ? tags : null);
 }
 
 async function updateField(id, field, value) {
