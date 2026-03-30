@@ -242,16 +242,13 @@ const today = new Date().toISOString().slice(0, 10);
 
 const VIEWS = [
   { id: 'today', icon: '📅', label: 'Today' },
-  { id: 'inbox', icon: '📥', label: 'Inbox' },
-  { id: 'active', icon: '📋', label: 'Active' },
+  { id: 'next', icon: '➡️', label: 'Next' },
   { id: 'all', icon: '🗂️', label: 'All Tasks' },
-  { id: 'waiting', icon: '⏳', label: 'Waiting' },
-  { id: 'done', icon: '✅', label: 'Done' },
 ];
 
 const PRIO_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 const PRIO_TAG = { critical: 'tag-critical', high: 'tag-high', medium: 'tag-medium', low: 'tag-low' };
-const SRC_ICON = { email: '📧', conversation: '💬', manual: '✏️', cron: '⚙️' };
+const SRC_ICON = { email: '📧', reminder: '🔔', conversation: '💬', manual: '✏️', cron: '⚙️' };
 
 async function loadTasks() {
   const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
@@ -261,29 +258,41 @@ async function loadTasks() {
 }
 
 function getViewTasks(view) {
+  const isOpen = t => !['done','cancelled'].includes(t.status);
+  const isTodayTask = t => isOpen(t) && (
+    t.scheduled_date === today ||
+    (t.due_date && t.due_date <= today) ||
+    (t.priority === 'critical' && (!t.scheduled_date || t.scheduled_date <= today))
+  );
+
   switch (view) {
     case 'today':
-      return allTasks.filter(t =>
-        t.status !== 'done' && t.status !== 'cancelled' && (
-          t.scheduled_date === today ||
-          t.priority === 'critical' ||
-          (t.due_date && t.due_date <= today)
-        )
-      ).sort((a, b) => PRIO_ORDER[a.priority] - PRIO_ORDER[b.priority]);
-    case 'inbox':
-      return allTasks.filter(t => t.status === 'inbox');
-    case 'active':
-      return allTasks.filter(t => t.status === 'active' || t.status === 'scheduled')
+      return allTasks.filter(isTodayTask)
         .sort((a, b) => PRIO_ORDER[a.priority] - PRIO_ORDER[b.priority]);
-    case 'waiting':
-      return allTasks.filter(t => t.status === 'waiting');
-    case 'done':
-      return allTasks.filter(t => t.status === 'done')
-        .sort((a, b) => new Date(b.completed_at || b.updated_at) - new Date(a.completed_at || a.updated_at));
+
+    case 'next':
+      return allTasks
+        .filter(t => isOpen(t) && !isTodayTask(t))
+        .sort((a, b) => {
+          const p = PRIO_ORDER[a.priority] - PRIO_ORDER[b.priority];
+          if (p !== 0) return p;
+          const ad = a.due_date || a.scheduled_date || '9999-12-31';
+          const bd = b.due_date || b.scheduled_date || '9999-12-31';
+          return ad.localeCompare(bd);
+        });
+
     case 'all':
     default:
-      return allTasks.filter(t => t.status !== 'cancelled')
-        .sort((a, b) => PRIO_ORDER[a.priority] - PRIO_ORDER[b.priority]);
+      return allTasks
+        .filter(t => t.status !== 'cancelled')
+        .filter(t => !(t.status === 'done' && t.completed_at && ((Date.now() - new Date(t.completed_at).getTime()) > 30 * 86400000)))
+        .sort((a, b) => {
+          const aDone = a.status === 'done' ? 1 : 0;
+          const bDone = b.status === 'done' ? 1 : 0;
+          if (aDone !== bDone) return aDone - bDone; // done goes to bottom
+          if (aDone) return new Date(b.completed_at || b.updated_at) - new Date(a.completed_at || a.updated_at);
+          return PRIO_ORDER[a.priority] - PRIO_ORDER[b.priority];
+        });
   }
 }
 
@@ -387,28 +396,17 @@ function renderContent() {
   const tasks = getViewTasks(currentView);
   
   if (tasks.length === 0) {
-    document.getElementById('content').innerHTML = `<div class="panel"><div class="empty">${
-      currentView === 'done' ? '✅ No completed tasks yet. Get after it!' :
-      currentView === 'inbox' ? '📥 Inbox is empty. Nice work!' :
-      '🎯 Nothing here. You\'re all caught up!'
-    }</div></div>`;
+    document.getElementById('content').innerHTML = `<div class="panel"><div class="empty">🎯 Nothing here. You\'re all caught up!</div></div>`;
     return;
   }
 
-  // Group by section for Today view
   if (currentView === 'today') {
-    const overdue = tasks.filter(t => t.due_date && t.due_date < today);
-    const critical = tasks.filter(t => t.priority === 'critical' && !(t.due_date && t.due_date < today));
-    const rest = tasks.filter(t => t.priority !== 'critical' && !(t.due_date && t.due_date < today));
-    
+    const reminders = tasks.filter(t => t.source === 'reminder');
+    const work = tasks.filter(t => t.source !== 'reminder');
+
     let html = '';
-    if (overdue.length) {
-      html += renderSection('⚠️ Overdue', overdue);
-    }
-    if (critical.length) {
-      html += renderSection('🔴 Critical', critical);
-    }
-    html += renderSection('🎯 Priority Stack', rest);
+    html += renderSection('🎯 Today — Tasks', work);
+    if (reminders.length) html += renderSection('🔔 Today — Reminders', reminders);
     document.getElementById('content').innerHTML = html;
   } else {
     document.getElementById('content').innerHTML = renderSection(
