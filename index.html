@@ -488,8 +488,12 @@ function openDetail(id) {
       <div class="detail-field"><label>Source</label><div class="val">${t.source ? `${SRC_ICON[t.source]||''} ${t.source}` : '—'}</div></div>
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-      <div class="detail-field"><label>Due Date</label><div class="val">${t.due_date || '—'}</div></div>
-      <div class="detail-field"><label>Scheduled</label><div class="val">${t.scheduled_date || '—'}</div></div>
+      <div class="detail-field"><label>Due Date</label>
+        <input type="date" value="${t.due_date || ''}" onchange="updateField('${t.id}','due_date',this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;" />
+      </div>
+      <div class="detail-field"><label>Scheduled</label>
+        <input type="date" value="${t.scheduled_date || ''}" onchange="updateField('${t.id}','scheduled_date',this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;" />
+      </div>
     </div>
     <div class="detail-field"><label>Assigned To</label><div class="val">${t.assigned_to || 'neil'}</div></div>
     ${t.notes ? `<div class="detail-field"><label>Notes</label><div class="val">${esc(t.notes)}</div></div>` : ''}
