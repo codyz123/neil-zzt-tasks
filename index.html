@@ -142,6 +142,8 @@
   .tag-low { background: #f8fafc; color: #64748b; }
   .tag-cat { background: #eff6ff; color: #1d4ed8; }
   .tag-src { background: #faf5ff; color: #7c3aed; }
+  .tag-type-task { background: #eef2ff; color: #3730a3; }
+  .tag-type-reminder { background: #fffbeb; color: #b45309; }
   .task-due { font-size: 10px; color: var(--text-light); }
   .task-due.overdue { color: var(--coral); font-weight: 600; }
   .task-est { font-size: 11px; color: var(--text-light); margin-left: auto; white-space: nowrap; }
@@ -406,6 +408,7 @@ function renderTaskItem(t) {
   else if (t.due_date) dueLabel = `<span class="task-due">Due ${t.due_date}</span>`;
   
   const effPriority = effectivePriority(t);
+  const type = t.source === 'reminder' ? 'reminder' : 'task';
 
   return `
     <li class="task-item">
@@ -415,6 +418,7 @@ function renderTaskItem(t) {
         ${t.description ? `<div class="task-desc">${esc(t.description)}</div>` : ''}
         <div class="task-meta">
           <span class="tag ${PRIO_TAG[effPriority]}">${effPriority}</span>
+          <span class="tag ${type === 'reminder' ? 'tag-type-reminder' : 'tag-type-task'}">${type === 'reminder' ? '🔔 reminder' : '✅ task'}</span>
           <span class="tag tag-cat">${t.category}</span>
           ${t.source ? `<span class="tag tag-src">${SRC_ICON[t.source] || ''} ${t.source}</span>` : ''}
           ${t.source === 'spark-form' ? `<a href="comps.html?id=${t.notes && t.notes.match(/request_id:([a-f0-9-]+)/)?.[1] || ''}" onclick="event.stopPropagation()" class="tag" style="background:#E3FB61;color:#141B3A;font-weight:700;text-decoration:none">⚡ View Comps →</a>` : ''}
