@@ -151,7 +151,7 @@ async function loadRequest(){
   document.getElementById('requestSection').appendChild(reqCard);
 
   // Fetch comps
-  const compRes=await fetch(SUPABASE_URL+'/rest/v1/spark_comps?request_id=eq.'+requestId+'&order=option_number.asc',{headers:hdrs});
+  const compRes=await fetch(SUPABASE_URL+'/rest/v1/spark_comps?request_id=eq.'+requestId+'&status=neq.rejected&order=option_number.asc',{headers:hdrs});
   const comps=await compRes.json();
   const grid=document.getElementById('compsGrid');
 
@@ -187,12 +187,48 @@ async function loadRequest(){
       card.appendChild(content);
     }
 
+    const actions=document.createElement('div');
+    actions.className='comp-actions';
+    const approveBtn=document.createElement('button');
+    approveBtn.className='btn btn-approve';
+    approveBtn.textContent='Approve';
+    approveBtn.onclick=()=>approveComp(c.id);
+    const rejectBtn=document.createElement('button');
+    rejectBtn.className='btn btn-reject';
+    rejectBtn.textContent='Reject';
+    rejectBtn.onclick=()=>rejectComp(c.id);
+    actions.appendChild(approveBtn);
+    actions.appendChild(rejectBtn);
+    card.appendChild(actions);
+
     grid.appendChild(card);
   });
   }catch(err){
     document.getElementById('compsGrid').innerHTML='<p style="color:red;padding:2rem">Error: '+err.message+'</p>';
     console.error(err);
   }
+}
+
+async function approveComp(id){
+  const res=await fetch(SUPABASE_URL+'/rest/v1/spark_comps?id=eq.'+id,{
+    method:'PATCH',
+    headers:hdrs,
+    body:JSON.stringify({status:'approved',updated_at:new Date().toISOString()})
+  });
+  if(!res.ok) return;
+  const card=document.getElementById('comp-'+id);
+  if(card) card.classList.add('approved');
+}
+
+async function rejectComp(id){
+  const res=await fetch(SUPABASE_URL+'/rest/v1/spark_comps?id=eq.'+id,{
+    method:'PATCH',
+    headers:hdrs,
+    body:JSON.stringify({status:'rejected',updated_at:new Date().toISOString()})
+  });
+  if(!res.ok) return;
+  const card=document.getElementById('comp-'+id);
+  if(card) card.remove();
 }
 
 function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
