@@ -115,12 +115,54 @@ const params=new URLSearchParams(window.location.search);
 const requestId=params.get('id');
 
 if(!requestId){
-  document.getElementById('requestSection').innerHTML='<div class="request-card"><h2>No request ID provided</h2><p>Add ?id=REQUEST_ID to the URL</p></div>';
+  loadHub();
 }else{
   loadRequest();
 }
 
+async function loadHub(){
+  document.querySelector('.header h1').textContent='Spark Comps Hub';
+  document.getElementById('statusBadge').textContent='PROJECTS';
+  document.getElementById('compsGrid').innerHTML='';
+
+  try {
+    const reqRes=await fetch(SUPABASE_URL+'/rest/v1/marketing_requests?order=created_at.desc&limit=50',{headers:hdrs});
+    const allReqs=await reqRes.json();
+    const reqs=(allReqs||[]).filter(r=>!['delivered','cancelled','archived','done'].includes(String(r.status||'').toLowerCase()));
+
+    if(!reqs.length){
+      document.getElementById('requestSection').innerHTML='<div class="request-card"><h2>No active Spark projects</h2></div>';
+      return;
+    }
+
+    const cards=reqs.map(r=>{
+      const types=(r.request_types||[]).join(', ') || 'Request';
+      const title=types.length>80?types.slice(0,80)+'…':types;
+      return `
+        <a href="comps.html?id=${r.id}" style="display:block;text-decoration:none;color:inherit;">
+          <div class="request-card" style="margin-bottom:1rem;">
+            <h2>⚡ ${escHtml(title)}</h2>
+            <div class="request-meta">
+              <span class="meta-tag">From: ${escHtml(r.requester_email||'unknown')}</span>
+              <span class="meta-tag">${escHtml(r.urgency||'No Rush')}</span>
+              <span class="meta-tag">${escHtml(r.status||'received')}</span>
+            </div>
+            <div class="request-details">${escHtml((r.details||'').slice(0,180))}${(r.details||'').length>180?'…':''}</div>
+            <div class="request-goal">Open comps →</div>
+          </div>
+        </a>
+      `;
+    }).join('');
+
+    document.getElementById('requestSection').innerHTML=cards;
+  } catch(err) {
+    document.getElementById('requestSection').innerHTML='<div class="request-card"><h2>Error loading Spark hub</h2><p>'+escHtml(err.message)+'</p></div>';
+  }
+}
+
 async function loadRequest(){
+  document.querySelector('.header h1').textContent='Spark Review';
+  document.getElementById('statusBadge').textContent='REVIEW';
   try{
   // Fetch request
   const reqRes=await fetch(SUPABASE_URL+'/rest/v1/marketing_requests?id=eq.'+requestId,{headers:hdrs});
