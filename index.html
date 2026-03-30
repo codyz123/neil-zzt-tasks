@@ -238,6 +238,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 let currentView = 'today';
+let showCompleted = false;
 const today = new Date().toISOString().slice(0, 10);
 
 const VIEWS = [
@@ -315,11 +316,12 @@ function getViewTasks(view) {
     default:
       return allTasks
         .filter(t => t.status !== 'cancelled')
+        .filter(t => showCompleted || t.status !== 'done')
         .filter(t => !(t.status === 'done' && t.completed_at && ((Date.now() - new Date(t.completed_at).getTime()) > 30 * 86400000)))
         .sort((a, b) => {
           const aDone = a.status === 'done' ? 1 : 0;
           const bDone = b.status === 'done' ? 1 : 0;
-          if (aDone !== bDone) return aDone - bDone; // done goes to bottom
+          if (aDone !== bDone) return aDone - bDone; // done goes to bottom when shown
           if (aDone) return new Date(b.completed_at || b.updated_at) - new Date(a.completed_at || a.updated_at);
           return priorityScore(a) - priorityScore(b);
         });
@@ -367,6 +369,7 @@ function renderTopbar() {
     <h2>${viewLabel}</h2>
     <div class="topbar-right">
       <span class="topbar-date">${dateStr}</span>
+      <button class="btn btn-outline" onclick="toggleCompletedVisibility()">${showCompleted ? 'Hide Completed' : 'Show Completed'}</button>
       <button class="btn btn-primary" onclick="openAddModal()">+ Add Task</button>
     </div>
   `;
@@ -467,6 +470,11 @@ function render() {
 
 function switchView(view) {
   currentView = view;
+  render();
+}
+
+function toggleCompletedVisibility() {
+  showCompleted = !showCompleted;
   render();
 }
 
