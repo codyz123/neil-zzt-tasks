@@ -261,15 +261,12 @@ function daysUntil(d) {
 }
 
 function effectivePriority(t) {
-  const raw = t.priority || 'medium';
-  if (['done','cancelled'].includes(t.status)) return raw;
-  if (!t.due_date) return raw;
+  return t.priority || 'medium';
+}
 
-  const d = daysUntil(t.due_date);
-  if (d === null) return raw;
-  if (d <= 0) return 'critical';
-  if (d <= 2) return 'high';
-  return 'low'; // dated work stays low until it enters the 2-day window
+function isReminder(t) {
+  const tags = Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : [];
+  return tags.includes('reminder');
 }
 
 function isReminder(t) {
