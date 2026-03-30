@@ -391,14 +391,10 @@ function renderSidebar() {
     ${overdue > 0 ? `<div class="nav-item" onclick="switchView('today')" style="color:var(--coral);">⚠️ Overdue <span class="nav-badge">${overdue}</span></div>` : ''}
 
     <div class="nav-section">Spark Comps</div>
-    ${sparkProjects.length ? sparkProjects.slice(0, 12).map(p => {
-      const types = Array.isArray(p.request_types) && p.request_types.length ? p.request_types.join(', ') : 'Request';
-      const label = types.length > 30 ? `${types.slice(0, 30)}…` : types;
-      return `<a class="nav-item" href="comps.html?id=${p.id}" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;">
-        <span>⚡ ${label}</span>
-        <span class="nav-badge" style="background:#E3FB61;color:#141B3A">open</span>
-      </a>`;
-    }).join('') : `<div class="nav-item" style="opacity:.6;">No active Spark projects</div>`}
+    <a class="nav-item" href="comps.html" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;">
+      <span>⚡ Comps Hub</span>
+      <span class="nav-badge" style="background:#E3FB61;color:#141B3A">${sparkProjects.length}</span>
+    </a>
 
     <div class="nav-section">Categories</div>
     ${['business','marketing','hiring','finance','operations','tech','personal','facilities'].map(cat => {
