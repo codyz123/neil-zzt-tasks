@@ -472,8 +472,12 @@ function openDetail(id) {
   if (!t) return;
   
   document.getElementById('detailContent').innerHTML = `
-    <h3>${esc(t.title)}</h3>
-    ${t.description ? `<div class="detail-field"><label>Description</label><div class="val">${esc(t.description)}</div></div>` : ''}
+    <div class="detail-field"><label>Title</label>
+      <input value="${esc(t.title)}" onchange="updateField('${t.id}','title',this.value)" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;font-weight:600;color:var(--text);" />
+    </div>
+    <div class="detail-field"><label>Description</label>
+      <textarea onchange="updateField('${t.id}','description',this.value)" style="width:100%;min-height:84px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;line-height:1.4;resize:vertical;">${esc(t.description || '')}</textarea>
+    </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
       <div class="detail-field"><label>Status</label>
         <select onchange="updateField('${t.id}','status',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;">
@@ -513,15 +517,20 @@ function closeDetail() {
 }
 
 async function updateField(id, field, value) {
+  if (field === 'title' && !String(value || '').trim()) {
+    alert('Title cannot be empty');
+    return;
+  }
+
   const update = {};
-  update[field] = value;
+  update[field] = field === 'title' ? String(value).trim() : value;
   if (field === 'status' && value === 'done') update.completed_at = new Date().toISOString();
-  
+
   const { error } = await sb.from('tasks').update(update).eq('id', id);
   if (error) { console.error(error); return; }
-  
+
   const t = allTasks.find(t => t.id === id);
-  if (t) { t[field] = value; if (update.completed_at) t.completed_at = update.completed_at; }
+  if (t) { t[field] = update[field]; if (update.completed_at) t.completed_at = update.completed_at; }
   render();
 }
 
