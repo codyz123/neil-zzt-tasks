@@ -239,6 +239,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
+let sparkProjects = [];
 let currentView = 'today';
 let showCompleted = false;
 const today = new Date().toISOString().slice(0, 10);
@@ -282,7 +283,24 @@ async function loadTasks() {
   const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
   if (error) { console.error(error); return; }
   allTasks = data || [];
+  await loadSparkProjects();
   render();
+}
+
+async function loadSparkProjects() {
+  const { data, error } = await sb
+    .from('marketing_requests')
+    .select('id,request_types,requester_email,status,created_at')
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error('spark project load failed', error);
+    sparkProjects = [];
+    return;
+  }
+
+  sparkProjects = (data || []).filter(r => !['delivered', 'cancelled', 'archived', 'done'].includes(String(r.status || '').toLowerCase()));
 }
 
 function placementOverride(t) {
@@ -371,6 +389,17 @@ function renderSidebar() {
       </div>
     `).join('')}
     ${overdue > 0 ? `<div class="nav-item" onclick="switchView('today')" style="color:var(--coral);">⚠️ Overdue <span class="nav-badge">${overdue}</span></div>` : ''}
+
+    <div class="nav-section">Spark Comps</div>
+    ${sparkProjects.length ? sparkProjects.slice(0, 12).map(p => {
+      const types = Array.isArray(p.request_types) && p.request_types.length ? p.request_types.join(', ') : 'Request';
+      const label = types.length > 30 ? `${types.slice(0, 30)}…` : types;
+      return `<a class="nav-item" href="comps.html?id=${p.id}" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;">
+        <span>⚡ ${label}</span>
+        <span class="nav-badge" style="background:#E3FB61;color:#141B3A">open</span>
+      </a>`;
+    }).join('') : `<div class="nav-item" style="opacity:.6;">No active Spark projects</div>`}
+
     <div class="nav-section">Categories</div>
     ${['business','marketing','hiring','finance','operations','tech','personal','facilities'].map(cat => {
       const n = allTasks.filter(t => t.category === cat && !['done','cancelled'].includes(t.status)).length;
