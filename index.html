@@ -266,8 +266,7 @@ function effectivePriority(t) {
   if (d === null) return raw;
   if (d <= 0) return 'critical';
   if (d <= 2) return 'high';
-  if (['high','critical'].includes(raw)) return 'medium';
-  return raw;
+  return 'low'; // dated work stays low until it enters the 2-day window
 }
 
 function priorityScore(t) {
