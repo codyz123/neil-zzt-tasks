@@ -261,15 +261,7 @@ function daysUntil(d) {
 }
 
 function effectivePriority(t) {
-  const raw = t.priority || 'medium';
-  if (['done','cancelled'].includes(t.status)) return raw;
-  if (!t.due_date) return raw;
-
-  const d = daysUntil(t.due_date);
-  if (d === null) return raw;
-  if (d <= 0) return 'critical';
-  if (d <= 2) return 'high';
-  return 'low'; // dated work stays low until it enters the 2-day window
+  return t.priority || 'medium';
 }
 
 function isReminder(t) {
@@ -423,7 +415,6 @@ function renderTaskItem(t) {
         ${t.description ? `<div class="task-desc">${esc(t.description)}</div>` : ''}
         <div class="task-meta">
           <span class="tag ${PRIO_TAG[effPriority]}">${effPriority}</span>
-          ${t.priority !== effPriority ? `<span class="tag tag-src">set: ${t.priority}</span>` : ''}
           <span class="tag ${type === 'reminder' ? 'tag-type-reminder' : 'tag-type-task'}">${type === 'reminder' ? '🔔 reminder' : '✅ task'}</span>
           <span class="tag tag-cat">${t.category}</span>
           ${t.source ? `<span class="tag tag-src">${SRC_ICON[t.source] || ''} ${t.source}</span>` : ''}
