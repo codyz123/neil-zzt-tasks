@@ -285,13 +285,26 @@ async function loadTasks() {
   render();
 }
 
+function placementOverride(t) {
+  const tags = Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : [];
+  if (tags.includes('force-today')) return 'today';
+  if (tags.includes('force-next')) return 'next';
+  return 'auto';
+}
+
 function getViewTasks(view) {
   const isOpen = t => !['done','cancelled'].includes(t.status);
-  const isTodayTask = t => isOpen(t) && (
+  const isTodayByContext = t => isOpen(t) && (
     t.scheduled_date === today ||
     (t.due_date && t.due_date <= today) ||
     (t.priority === 'critical' && (!t.scheduled_date || t.scheduled_date <= today))
   );
+  const isTodayTask = t => {
+    const p = placementOverride(t);
+    if (p === 'today') return isOpen(t);
+    if (p === 'next') return false;
+    return isTodayByContext(t);
+  };
 
   switch (view) {
     case 'today':
@@ -300,7 +313,13 @@ function getViewTasks(view) {
 
     case 'next': {
       const base = allTasks
-        .filter(t => isOpen(t) && !isTodayTask(t))
+        .filter(t => {
+          if (!isOpen(t)) return false;
+          const p = placementOverride(t);
+          if (p === 'today') return false;
+          if (p === 'next') return true;
+          return !isTodayByContext(t);
+        })
         .sort((a, b) => {
           const p = priorityScore(a) - priorityScore(b);
           if (p !== 0) return p;
@@ -552,6 +571,13 @@ function openDetail(id) {
         <input type="date" value="${t.scheduled_date || ''}" onchange="updateField('${t.id}','scheduled_date',this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;" />
       </div>
     </div>
+    <div class="detail-field"><label>List Placement</label>
+      <select onchange="updatePlacement('${t.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;">
+        <option value="auto" ${placementOverride(t)==='auto'?'selected':''}>Auto (context-driven)</option>
+        <option value="today" ${placementOverride(t)==='today'?'selected':''}>Force Today</option>
+        <option value="next" ${placementOverride(t)==='next'?'selected':''}>Force Next</option>
+      </select>
+    </div>
     <div class="detail-field"><label>Assigned To</label><div class="val">${t.assigned_to || 'neil'}</div></div>
     ${t.notes ? `<div class="detail-field"><label>Notes</label><div class="val">${esc(t.notes)}</div></div>` : ''}
     <div class="detail-field"><label>Created</label><div class="val">${new Date(t.created_at).toLocaleString()} by ${t.created_by}</div></div>
@@ -575,6 +601,15 @@ async function updateType(id, typeValue) {
   let tags = Array.isArray(t.tags) ? [...t.tags] : [];
   tags = tags.filter(x => String(x).toLowerCase() !== 'reminder');
   if (typeValue === 'reminder') tags.push('reminder');
+  await updateField(id, 'tags', tags.length ? tags : null);
+}
+
+async function updatePlacement(id, placement) {
+  const t = allTasks.find(x => x.id === id) || {};
+  let tags = Array.isArray(t.tags) ? [...t.tags] : [];
+  tags = tags.filter(x => !['force-today','force-next'].includes(String(x).toLowerCase()));
+  if (placement === 'today') tags.push('force-today');
+  if (placement === 'next') tags.push('force-next');
   await updateField(id, 'tags', tags.length ? tags : null);
 }
 
