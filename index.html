@@ -298,7 +298,7 @@ function renderSidebar() {
   `;
   document.getElementById('mobileTabs').innerHTML = VIEWS.map(v =>
     `<span class="tab ${currentView===v.id?'active':''}" onclick="switchView('${v.id}')">${v.icon} ${v.label}</span>`
-  ).join('');
+  ).join('') + `<a class="tab" href="comps.html" style="text-decoration:none;color:inherit;">⚡ Comps</a>`;
 }
 
 function renderTopbar() {
