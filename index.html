@@ -504,7 +504,7 @@ function openDetail(id) {
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="detail-field"><label>Status</label>
         <select onchange="updateField('${t.id}','status',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
-          ${['inbox','active','scheduled','waiting','done','cancelled'].map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${s}</option>`).join('')}
+          ${['inbox','today','queue','done','cancelled'].map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${s}</option>`).join('')}
         </select>
       </div>
       <div class="detail-field"><label>Priority</label>
@@ -520,13 +520,8 @@ function openDetail(id) {
         <option value="project" ${type==='project'?'selected':''}>🔷 Project</option>
       </select>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-      <div class="detail-field"><label>Due Date</label>
-        <input type="date" value="${t.due_date||''}" onchange="updateField('${t.id}','due_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
-      </div>
-      <div class="detail-field"><label>Scheduled</label>
-        <input type="date" value="${t.scheduled_date||''}" onchange="updateField('${t.id}','scheduled_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
-      </div>
+    <div class="detail-field"><label>Due Date</label>
+      <input type="date" value="${t.due_date||''}" onchange="updateField('${t.id}','due_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
     </div>
     <div class="detail-field"><label>Assigned To</label><div style="font-size:13px;">${t.assigned_to||'neil'}</div></div>
     ${t.notes?`<div class="detail-field"><label>Notes</label><div style="font-size:12px;white-space:pre-wrap;">${esc(t.notes)}</div></div>`:''}
