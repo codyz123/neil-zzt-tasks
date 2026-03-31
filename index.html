@@ -47,13 +47,7 @@
   .btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
   .btn-outline:hover { background: var(--bg); }
 
-  .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 20px 28px 0; }
-  .stat-card { background: white; border-radius: 10px; padding: 16px; border: 1px solid var(--border); }
-  .stat-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
-  .stat-value { font-size: 28px; font-weight: 700; margin-top: 2px; letter-spacing: -1px; }
-  .stat-sub { font-size: 11px; color: var(--text-light); margin-top: 1px; }
-  .stat-value.red { color: var(--coral); }
-  .stat-value.green { color: var(--green); }
+
 
   .content { padding: 20px 28px 28px; }
   .panel { background: white; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
@@ -144,7 +138,7 @@
 
 <div class="main">
   <div class="topbar" id="topbar"></div>
-  <div class="stats-bar" id="statsBar"></div>
+  <!-- stats removed for cleaner UI -->
   <div class="content" id="content"><div class="loading">Loading tasks...</div></div>
 </div>
 
@@ -158,11 +152,10 @@
     <textarea id="newDesc" placeholder="Additional context (optional)"></textarea>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
       <div><label>Priority</label><select id="newPriority"><option value="medium">Medium</option><option value="critical">Critical</option><option value="high">High</option><option value="low">Low</option></select></div>
-      <div><label>Category</label><select id="newCategory"><option value="business">Business</option><option value="personal">Personal</option><option value="marketing">Marketing</option><option value="operations">Operations</option><option value="hiring">Hiring</option><option value="finance">Finance</option><option value="facilities">Facilities</option><option value="tech">Tech</option></select></div>
-    </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-      <div><label>Due Date</label><input type="date" id="newDue"></div>
       <div><label>Type</label><select id="newType"><option value="task">Task</option><option value="reminder">Reminder</option><option value="project">Project</option></select></div>
+    </div>
+    <div>
+      <label>Due Date</label><input type="date" id="newDue">
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
@@ -281,7 +274,7 @@ async function loadSparkProjects() {
 }
 
 // --- Render ---
-function render() { renderSidebar(); renderTopbar(); renderStats(); renderContent(); }
+function render() { renderSidebar(); renderTopbar(); renderContent(); }
 
 function renderSidebar() {
   const counts = getCounts();
@@ -301,11 +294,7 @@ function renderSidebar() {
       <span>⚡ Comps Hub</span>
       <span class="nav-badge" style="background:#E3FB61;color:#141B3A">${sparkProjects.length}</span>
     </a>
-    <div class="nav-section">Categories</div>
-    ${['business','marketing','hiring','finance','operations','tech','personal','facilities'].map(cat => {
-      const n=allTasks.filter(t=>t.category===cat&&isOpen(t)&&!isSubtask(t)).length;
-      return n>0?`<div class="nav-item" onclick="filterCategory('${cat}')">${cat[0].toUpperCase()+cat.slice(1)} <span class="nav-badge" style="background:var(--navy-lighter)">${n}</span></div>`:'';
-    }).join('')}
+
   `;
   document.getElementById('mobileTabs').innerHTML = VIEWS.map(v =>
     `<span class="tab ${currentView===v.id?'active':''}" onclick="switchView('${v.id}')">${v.icon} ${v.label}</span>`
@@ -326,20 +315,6 @@ function renderTopbar() {
   `;
 }
 
-function renderStats() {
-  const counts = getCounts();
-  const overdue = allTasks.filter(t=>t.due_date&&t.due_date<today&&isOpen(t)&&!isSubtask(t)).length;
-  const doneWeek = allTasks.filter(t=>{
-    if(t.status!=='done'||!t.completed_at) return false;
-    return (Date.now()-new Date(t.completed_at).getTime())<7*86400000;
-  }).length;
-  document.getElementById('statsBar').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Inbox</div><div class="stat-value">${counts.inbox}</div><div class="stat-sub">To review</div></div>
-    <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value">${counts.today}</div><div class="stat-sub">In progress</div></div>
-    <div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value ${overdue>0?'red':''}">${overdue}</div><div class="stat-sub">${overdue>0?'Needs attention':'All clear'}</div></div>
-    <div class="stat-card"><div class="stat-label">Done This Week</div><div class="stat-value green">${doneWeek}</div><div class="stat-sub">Keep going</div></div>
-  `;
-}
 
 function renderContent() {
   let tasks;
@@ -454,7 +429,6 @@ function renderTaskItem(t) {
       <div class="task-meta">
         <span class="tag ${PRIO_TAG[t.priority]}">${t.priority}</span>
         ${typeBadge}
-        <span class="tag tag-cat">${t.category}</span>
         ${t.source?`<span class="tag tag-src">${SRC_ICON[t.source]||''} ${t.source}</span>`:''}
         ${t.source==='spark-form'?`<a href="comps.html?id=${(t.notes||'').match(/request_id:([a-f0-9-]+)/)?.[1]||''}" onclick="event.stopPropagation()" class="tag" style="background:#E3FB61;color:#141B3A;font-weight:700;text-decoration:none">⚡ Comps →</a>`:''}
         ${dueLabel}
@@ -539,19 +513,12 @@ function openDetail(id) {
         </select>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-      <div class="detail-field"><label>Type</label>
-        <select onchange="updateType('${t.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
-          <option value="task" ${type==='task'?'selected':''}>✅ Task</option>
-          <option value="reminder" ${type==='reminder'?'selected':''}>🔔 Reminder</option>
-          <option value="project" ${type==='project'?'selected':''}>🔷 Project</option>
-        </select>
-      </div>
-      <div class="detail-field"><label>Category</label>
-        <select onchange="updateField('${t.id}','category',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
-          ${['business','marketing','hiring','finance','operations','tech','personal','facilities'].map(c=>`<option value="${c}" ${t.category===c?'selected':''}>${c}</option>`).join('')}
-        </select>
-      </div>
+    <div class="detail-field"><label>Type</label>
+      <select onchange="updateType('${t.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+        <option value="task" ${type==='task'?'selected':''}>✅ Task</option>
+        <option value="reminder" ${type==='reminder'?'selected':''}>🔔 Reminder</option>
+        <option value="project" ${type==='project'?'selected':''}>🔷 Project</option>
+      </select>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="detail-field"><label>Due Date</label>
@@ -647,7 +614,7 @@ async function addTask() {
     title,
     description: document.getElementById('newDesc').value.trim()||null,
     priority: document.getElementById('newPriority').value,
-    category: document.getElementById('newCategory').value,
+    category: 'business',
     due_date: document.getElementById('newDue').value||null,
     status: 'inbox',
     source: 'manual',
