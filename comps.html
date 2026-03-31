@@ -144,22 +144,25 @@ async function loadHub(){
     }
 
     for (const r of reqs) {
-      const types=(r.request_types||[]).join(', ') || 'Project';
+      const types=(r.request_types||[]);
       const linkedTask=(sparkTasks||[]).find(t => (t.notes||'').includes(`request_id:${r.id}`));
+
+      // Project title = what the project IS (from details), not the category
+      const detailText=(r.details||'').trim();
+      const projectName=detailText.length>80 ? detailText.slice(0,80)+'…' : (detailText || 'Untitled Project');
 
       const project=document.createElement('div');
       project.className='request-card';
       project.style.marginBottom='0.75rem';
       project.innerHTML=`
-        <h2>⚡ ${escHtml(types)}</h2>
+        <h2>⚡ ${escHtml(projectName)}</h2>
         <div class="request-meta">
           <span class="meta-tag">From: ${escHtml(r.requester_email||'unknown')}</span>
           <span class="meta-tag">${escHtml(r.urgency||'No Rush')}</span>
-          <span class="meta-tag">${escHtml(r.status||'received')}</span>
-          ${linkedTask ? `<span class="meta-tag">Task: ${escHtml(linkedTask.title||'linked')}</span>` : ''}
+          ${types.map(t=>'<span class="meta-tag" style="background:#E3FB61;color:#141B3A;font-weight:600">'+escHtml(t)+'</span>').join('')}
+          ${linkedTask ? '<span class="meta-tag">📋 '+escHtml(linkedTask.title||'linked')+'</span>' : ''}
         </div>
-        <div class="request-details">${escHtml(r.details||'')}</div>
-        ${r.goal ? `<div class="request-goal">Goal: ${escHtml(r.goal)}</div>` : ''}
+        ${r.goal ? '<div class="request-goal">Goal: '+escHtml(r.goal)+'</div>' : ''}
       `;
       reqSection.appendChild(project);
 
