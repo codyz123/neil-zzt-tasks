@@ -118,6 +118,9 @@
   .detail-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); }
   .loading { padding: 40px; text-align: center; color: var(--text-light); }
 
+  .fab { position: fixed; bottom: 24px; right: 24px; width: 52px; height: 52px; border-radius: 50%; background: var(--navy); color: white; font-size: 28px; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(0,0,0,0.25); z-index: 30; display: flex; align-items: center; justify-content: center; transition: transform 0.12s, background 0.12s; }
+  .fab:hover { background: var(--navy-light); transform: scale(1.08); }
+
   @media (max-width: 768px) {
     .sidebar { display: none; }
     .mobile-nav, .mobile-tabs { display: block; }
@@ -141,6 +144,8 @@
   <!-- stats removed for cleaner UI -->
   <div class="content" id="content"><div class="loading">Loading tasks...</div></div>
 </div>
+
+<button class="fab" onclick="openAddModal()" title="Add Task">+</button>
 
 <!-- Add Task Modal -->
 <div class="modal-overlay" id="addModal">
