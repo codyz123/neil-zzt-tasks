@@ -7,78 +7,23 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600;700&display=swap');
-  
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  
   :root {
-    --navy: #141B3A;
-    --navy-light: #1e2752;
-    --navy-lighter: #2a3468;
-    --pink: #D69BC6;
-    --cream: #FCFAF1;
-    --lime: #D7DD38;
-    --sky: #B9E3EA;
-    --coral: #E85C41;
-    --green: #529214;
-    --text: #2d2d2d;
-    --text-light: #6b7280;
-    --border: #e5e7eb;
-    --bg: #f8f9fa;
-    --white: #ffffff;
+    --navy: #141B3A; --navy-light: #1e2752; --navy-lighter: #2a3468;
+    --pink: #D69BC6; --cream: #FCFAF1; --lime: #D7DD38; --sky: #B9E3EA;
+    --coral: #E85C41; --green: #529214; --blue: #3b82f6;
+    --text: #2d2d2d; --text-light: #6b7280; --border: #e5e7eb;
+    --bg: #f8f9fa; --white: #ffffff;
   }
-  
-  body {
-    font-family: 'Inter Tight', -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
+  body { font-family: 'Inter Tight', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  /* Mobile nav */
-  .mobile-nav {
-    display: none;
-    background: var(--navy);
-    padding: 12px 16px;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-  }
+  .mobile-nav { display: none; background: var(--navy); padding: 12px 16px; position: sticky; top: 0; z-index: 20; }
   .mobile-nav h1 { color: white; font-size: 16px; }
-  .mobile-tabs {
-    display: none;
-    background: white;
-    border-bottom: 1px solid var(--border);
-    padding: 0 8px;
-    overflow-x: auto;
-    white-space: nowrap;
-    position: sticky;
-    top: 44px;
-    z-index: 15;
-  }
-  .mobile-tabs .tab {
-    display: inline-block;
-    padding: 10px 14px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-light);
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-  }
+  .mobile-tabs { display: none; background: white; border-bottom: 1px solid var(--border); padding: 0 8px; overflow-x: auto; white-space: nowrap; position: sticky; top: 44px; z-index: 15; }
+  .mobile-tabs .tab { display: inline-block; padding: 10px 14px; font-size: 13px; font-weight: 500; color: var(--text-light); cursor: pointer; border-bottom: 2px solid transparent; }
   .mobile-tabs .tab.active { color: var(--navy); border-bottom-color: var(--navy); }
 
-  /* Sidebar */
-  .sidebar {
-    position: fixed;
-    left: 0; top: 0; bottom: 0;
-    width: 220px;
-    background: var(--navy);
-    color: white;
-    padding: 20px 0;
-    display: flex;
-    flex-direction: column;
-    z-index: 10;
-    overflow-y: auto;
-  }
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 220px; background: var(--navy); color: white; padding: 20px 0; display: flex; flex-direction: column; z-index: 10; overflow-y: auto; }
   .sidebar-logo { padding: 0 20px 20px; border-bottom: 1px solid var(--navy-lighter); margin-bottom: 8px; }
   .sidebar-logo h1 { font-size: 16px; font-weight: 700; }
   .sidebar-logo span { font-size: 11px; color: var(--pink); }
@@ -89,14 +34,12 @@
   .nav-badge { margin-left: auto; background: var(--coral); color: white; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px; min-width: 20px; text-align: center; }
   .nav-badge.g { background: var(--green); }
 
-  /* Main */
   .main { margin-left: 220px; min-height: 100vh; }
   .topbar { background: white; border-bottom: 1px solid var(--border); padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 5; }
   .topbar h2 { font-size: 20px; font-weight: 700; }
   .topbar-right { display: flex; align-items: center; gap: 12px; }
   .topbar-date { font-size: 13px; color: var(--text-light); }
 
-  /* Buttons */
   .btn { padding: 7px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; border: none; cursor: pointer; font-family: inherit; transition: all 0.12s; }
   .btn-primary { background: var(--navy); color: white; }
   .btn-primary:hover { background: var(--navy-light); }
@@ -104,7 +47,6 @@
   .btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
   .btn-outline:hover { background: var(--bg); }
 
-  /* Stats */
   .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; padding: 20px 28px 0; }
   .stat-card { background: white; border-radius: 10px; padding: 16px; border: 1px solid var(--border); }
   .stat-label { font-size: 11px; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 500; }
@@ -113,7 +55,6 @@
   .stat-value.red { color: var(--coral); }
   .stat-value.green { color: var(--green); }
 
-  /* Task list */
   .content { padding: 20px 28px 28px; }
   .panel { background: white; border-radius: 10px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
   .panel-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
@@ -144,11 +85,25 @@
   .tag-src { background: #faf5ff; color: #7c3aed; }
   .tag-type-task { background: #eef2ff; color: #3730a3; }
   .tag-type-reminder { background: #fffbeb; color: #b45309; }
+  .tag-type-project { background: #eff6ff; color: var(--blue); }
   .task-due { font-size: 10px; color: var(--text-light); }
   .task-due.overdue { color: var(--coral); font-weight: 600; }
   .task-est { font-size: 11px; color: var(--text-light); margin-left: auto; white-space: nowrap; }
 
-  /* Add task modal */
+  /* Project card */
+  .project-card { background: white; border: 2px solid var(--blue); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .project-header { padding: 14px 18px; background: #eff6ff; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .project-header:hover { background: #dbeafe; }
+  .project-icon { font-size: 16px; }
+  .project-name { font-size: 14px; font-weight: 600; flex: 1; }
+  .project-progress { font-size: 11px; color: var(--text-light); }
+  .project-progress-bar { width: 60px; height: 4px; background: #e5e7eb; border-radius: 2px; margin-left: 8px; display: inline-block; vertical-align: middle; }
+  .project-progress-fill { height: 100%; background: var(--blue); border-radius: 2px; transition: width 0.3s; }
+  .project-subtasks { border-top: 1px solid #e5e7eb; }
+  .project-subtasks .task-item.highlighted { background: #eff6ff; border-left: 3px solid var(--blue); }
+  .project-subtasks .task-item.not-today { opacity: 0.5; }
+
+  /* Modal */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 50; align-items: center; justify-content: center; }
   .modal-overlay.show { display: flex; }
   .modal { background: white; border-radius: 12px; width: 90%; max-width: 500px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
@@ -158,21 +113,15 @@
   .modal textarea { resize: vertical; min-height: 60px; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
 
-  /* Empty state */
   .empty { padding: 40px 20px; text-align: center; color: var(--text-light); font-size: 14px; }
 
-  /* Detail panel */
   .detail-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 40; }
   .detail-overlay.show { display: block; }
   .detail-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 420px; background: white; box-shadow: -4px 0 20px rgba(0,0,0,0.1); z-index: 45; overflow-y: auto; padding: 24px; display: none; }
   .detail-panel.show { display: block; }
-  .detail-panel h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
   .detail-field { margin-bottom: 14px; }
   .detail-field label { font-size: 11px; font-weight: 500; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 3px; }
-  .detail-field .val { font-size: 13px; }
   .detail-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-light); }
-
-  /* Loading */
   .loading { padding: 40px; text-align: center; color: var(--text-light); }
 
   @media (max-width: 768px) {
@@ -181,8 +130,6 @@
     .main { margin-left: 0; }
     .topbar { display: none; }
     .stats-bar { grid-template-columns: repeat(2, 1fr); padding: 12px 12px 0; gap: 8px; }
-    .stat-card { padding: 12px; }
-    .stat-value { font-size: 24px; }
     .content { padding: 12px; }
     .task-desc { max-width: 200px; }
     .detail-panel { width: 100%; }
@@ -193,7 +140,6 @@
 
 <div class="mobile-nav"><h1>ZZT Tasks</h1></div>
 <div class="mobile-tabs" id="mobileTabs"></div>
-
 <nav class="sidebar" id="sidebar"></nav>
 
 <div class="main">
@@ -216,7 +162,7 @@
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
       <div><label>Due Date</label><input type="date" id="newDue"></div>
-      <div><label>Energy Level</label><select id="newEnergy"><option value="normal">Normal</option><option value="deep">Deep Focus</option><option value="light">Light</option></select></div>
+      <div><label>Type</label><select id="newType"><option value="task">Task</option><option value="reminder">Reminder</option><option value="project">Project</option></select></div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
@@ -235,50 +181,90 @@
 <script>
 const SUPABASE_URL = 'https://qqlqqknlqqdyukxoyyty.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbHFxa25scXFkeXVreG95eXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTYzOTQsImV4cCI6MjA4ODEzMjM5NH0.jZBd3dM1aNjRqDXxL0a3p0V8BPtfdZ8I4LaAKN4_1mk';
-
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 let sparkProjects = [];
-let currentView = 'today';
+let currentView = 'inbox';
 let showCompleted = false;
 const today = new Date().toISOString().slice(0, 10);
 
 const VIEWS = [
-  { id: 'today', icon: '📅', label: 'Today' },
-  { id: 'next', icon: '➡️', label: 'Next' },
-  { id: 'all', icon: '🗂️', label: 'All Tasks' },
+  { id: 'inbox', icon: '📥', label: 'Inbox' },
+  { id: 'today', icon: '🎯', label: 'Today' },
+  { id: 'queue', icon: '📋', label: 'Task Queue' },
 ];
 
 const PRIO_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 const PRIO_TAG = { critical: 'tag-critical', high: 'tag-high', medium: 'tag-medium', low: 'tag-low' };
-const SRC_ICON = { email: '📧', reminder: '🔔', conversation: '💬', manual: '✏️', cron: '⚙️' };
+const SRC_ICON = { email: '📧', 'spark-form': '⚡', conversation: '💬', manual: '✏️', cron: '⚙️' };
+
+// --- Helpers ---
+function tags(t) { return Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : []; }
+function isReminder(t) { return tags(t).includes('reminder'); }
+function isProject(t) { return tags(t).includes('project'); }
+function isSubtask(t) { return !!t.depends_on; }
+function getType(t) { if (isProject(t)) return 'project'; if (isReminder(t)) return 'reminder'; return 'task'; }
+function isOpen(t) { return !['done','cancelled'].includes(t.status); }
+function priorityScore(t) { return PRIO_ORDER[t.priority] ?? 2; }
+function subtasksOf(parentId) { return allTasks.filter(t => t.depends_on === parentId); }
 
 function daysUntil(d) {
   if (!d) return null;
-  const now = new Date(today + 'T00:00:00');
-  const due = new Date(d + 'T00:00:00');
-  return Math.floor((due - now) / 86400000);
+  return Math.floor((new Date(d+'T00:00:00') - new Date(today+'T00:00:00')) / 86400000);
 }
 
-function effectivePriority(t) {
-  return t.priority || 'medium';
+// --- View Logic ---
+// Inbox: status=inbox, not a subtask
+function getInbox() {
+  return allTasks.filter(t => t.status === 'inbox' && !isSubtask(t))
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
-function isReminder(t) {
-  const tags = Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : [];
-  return tags.includes('reminder');
+// Today: status=active + tags include force-today, OR scheduled_date=today, OR due today/overdue + active
+// Plus: all reminders with due_date = today
+// Plus: projects that have subtasks scheduled for today
+function getToday() {
+  const items = allTasks.filter(t => {
+    if (!isOpen(t) || t.status === 'inbox') return false;
+    if (isSubtask(t)) return false; // subtasks render inside project cards
+    if (tags(t).includes('force-today')) return true;
+    if (t.scheduled_date === today) return true;
+    if (t.due_date && t.due_date <= today) return true;
+    // Projects: show if any subtask is scheduled today or due today
+    if (isProject(t)) {
+      const subs = subtasksOf(t.id);
+      return subs.some(s => isOpen(s) && (s.scheduled_date === today || (s.due_date && s.due_date <= today)));
+    }
+    return false;
+  });
+  return items.sort((a,b) => priorityScore(a) - priorityScore(b));
 }
 
-function isReminder(t) {
-  const tags = Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : [];
-  return tags.includes('reminder');
+// Queue: everything active that's not in inbox and not in today (and not subtasks)
+function getQueue() {
+  const todayIds = new Set(getToday().map(t => t.id));
+  return allTasks.filter(t => {
+    if (!isOpen(t)) return false;
+    if (t.status === 'inbox') return false;
+    if (isSubtask(t)) return false;
+    if (todayIds.has(t.id)) return false;
+    if (showCompleted === false && t.status === 'done') return false;
+    return true;
+  }).sort((a,b) => {
+    const p = priorityScore(a) - priorityScore(b);
+    if (p !== 0) return p;
+    const ad = a.due_date || '9999-12-31';
+    const bd = b.due_date || '9999-12-31';
+    return ad.localeCompare(bd);
+  });
 }
 
-function priorityScore(t) {
-  return PRIO_ORDER[effectivePriority(t)] ?? 99;
+function getCounts() {
+  return { inbox: getInbox().length, today: getToday().length, queue: getQueue().length };
 }
 
+// --- Load ---
 async function loadTasks() {
   const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
   if (error) { console.error(error); return; }
@@ -288,328 +274,303 @@ async function loadTasks() {
 }
 
 async function loadSparkProjects() {
-  const { data, error } = await sb
-    .from('marketing_requests')
+  const { data } = await sb.from('marketing_requests')
     .select('id,request_types,requester_email,status,created_at')
-    .order('created_at', { ascending: false })
-    .limit(20);
-
-  if (error) {
-    console.error('spark project load failed', error);
-    sparkProjects = [];
-    return;
-  }
-
-  sparkProjects = (data || []).filter(r => !['delivered', 'cancelled', 'archived', 'done'].includes(String(r.status || '').toLowerCase()));
+    .order('created_at', { ascending: false }).limit(20);
+  sparkProjects = (data || []).filter(r => !['delivered','cancelled','archived','done'].includes(String(r.status||'').toLowerCase()));
 }
 
-function placementOverride(t) {
-  const tags = Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : [];
-  if (tags.includes('force-today')) return 'today';
-  if (tags.includes('force-next')) return 'next';
-  return 'auto';
-}
-
-function getViewTasks(view) {
-  const isOpen = t => !['done','cancelled'].includes(t.status);
-  const isTodayByContext = t => isOpen(t) && (
-    t.scheduled_date === today ||
-    (t.due_date && t.due_date <= today) ||
-    (t.priority === 'critical' && (!t.scheduled_date || t.scheduled_date <= today))
-  );
-  const isTodayTask = t => {
-    const p = placementOverride(t);
-    if (p === 'today') return isOpen(t);
-    if (p === 'next') return false;
-    return isTodayByContext(t);
-  };
-
-  switch (view) {
-    case 'today':
-      return allTasks.filter(isTodayTask)
-        .sort((a, b) => priorityScore(a) - priorityScore(b));
-
-    case 'next': {
-      const base = allTasks
-        .filter(t => {
-          if (!isOpen(t)) return false;
-          const p = placementOverride(t);
-          if (p === 'today') return false;
-          if (p === 'next') return true;
-          return !isTodayByContext(t);
-        })
-        .sort((a, b) => {
-          const p = priorityScore(a) - priorityScore(b);
-          if (p !== 0) return p;
-          const ad = a.due_date || a.scheduled_date || '9999-12-31';
-          const bd = b.due_date || b.scheduled_date || '9999-12-31';
-          return ad.localeCompare(bd);
-        });
-
-      const nonMedium = base.filter(t => effectivePriority(t) !== 'medium');
-      if (nonMedium.length >= 5) return nonMedium;
-
-      const medium = base.filter(t => effectivePriority(t) === 'medium');
-      return [...nonMedium, ...medium].slice(0, Math.max(5, base.length));
-    }
-
-    case 'all':
-    default:
-      return allTasks
-        .filter(t => t.status !== 'cancelled')
-        .filter(t => showCompleted || t.status !== 'done')
-        .filter(t => !(t.status === 'done' && t.completed_at && ((Date.now() - new Date(t.completed_at).getTime()) > 30 * 86400000)))
-        .sort((a, b) => {
-          const aDone = a.status === 'done' ? 1 : 0;
-          const bDone = b.status === 'done' ? 1 : 0;
-          if (aDone !== bDone) return aDone - bDone; // done goes to bottom when shown
-          if (aDone) return new Date(b.completed_at || b.updated_at) - new Date(a.completed_at || a.updated_at);
-          return priorityScore(a) - priorityScore(b);
-        });
-  }
-}
-
-function getCounts() {
-  const c = {};
-  VIEWS.forEach(v => c[v.id] = getViewTasks(v.id).length);
-  return c;
-}
+// --- Render ---
+function render() { renderSidebar(); renderTopbar(); renderStats(); renderContent(); }
 
 function renderSidebar() {
   const counts = getCounts();
-  const overdue = allTasks.filter(t => t.due_date && t.due_date < today && !['done','cancelled'].includes(t.status)).length;
-  
+  const overdue = allTasks.filter(t => t.due_date && t.due_date < today && isOpen(t) && !isSubtask(t)).length;
   document.getElementById('sidebar').innerHTML = `
     <div class="sidebar-logo"><h1>ZERO ZERO TWO</h1><span>Task Manager</span></div>
     <div class="nav-section">Views</div>
     ${VIEWS.map(v => `
-      <div class="nav-item ${currentView === v.id ? 'active' : ''}" onclick="switchView('${v.id}')">
+      <div class="nav-item ${currentView===v.id?'active':''}" onclick="switchView('${v.id}')">
         ${v.icon} ${v.label}
-        ${counts[v.id] > 0 ? `<span class="nav-badge ${v.id === 'done' ? 'g' : ''}">${counts[v.id]}</span>` : ''}
+        ${counts[v.id]>0?`<span class="nav-badge ${v.id==='today'?'':'g'}">${counts[v.id]}</span>`:''}
       </div>
     `).join('')}
-    ${overdue > 0 ? `<div class="nav-item" onclick="switchView('today')" style="color:var(--coral);">⚠️ Overdue <span class="nav-badge">${overdue}</span></div>` : ''}
-
+    ${overdue>0?`<div class="nav-item" style="color:var(--coral);" onclick="switchView('today')">⚠️ Overdue <span class="nav-badge">${overdue}</span></div>`:''}
     <div class="nav-section">Spark Comps</div>
-    <a class="nav-item" href="comps.html" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;">
+    <a class="nav-item" href="comps.html" style="text-decoration:none;color:inherit;">
       <span>⚡ Comps Hub</span>
       <span class="nav-badge" style="background:#E3FB61;color:#141B3A">${sparkProjects.length}</span>
     </a>
-
     <div class="nav-section">Categories</div>
     ${['business','marketing','hiring','finance','operations','tech','personal','facilities'].map(cat => {
-      const n = allTasks.filter(t => t.category === cat && !['done','cancelled'].includes(t.status)).length;
-      return n > 0 ? `<div class="nav-item" onclick="filterCategory('${cat}')">${cat.charAt(0).toUpperCase()+cat.slice(1)} <span class="nav-badge" style="background:var(--navy-lighter)">${n}</span></div>` : '';
+      const n=allTasks.filter(t=>t.category===cat&&isOpen(t)&&!isSubtask(t)).length;
+      return n>0?`<div class="nav-item" onclick="filterCategory('${cat}')">${cat[0].toUpperCase()+cat.slice(1)} <span class="nav-badge" style="background:var(--navy-lighter)">${n}</span></div>`:'';
     }).join('')}
   `;
-
-  // Mobile tabs
   document.getElementById('mobileTabs').innerHTML = VIEWS.map(v =>
-    `<span class="tab ${currentView === v.id ? 'active' : ''}" onclick="switchView('${v.id}')">${v.icon} ${v.label}</span>`
+    `<span class="tab ${currentView===v.id?'active':''}" onclick="switchView('${v.id}')">${v.icon} ${v.label}</span>`
   ).join('');
 }
 
 function renderTopbar() {
-  const viewLabel = VIEWS.find(v => v.id === currentView)?.label || 'Tasks';
+  const label = VIEWS.find(v=>v.id===currentView)?.label||'Tasks';
   const d = new Date();
-  const dateStr = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const dateStr = d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   document.getElementById('topbar').innerHTML = `
-    <h2>${viewLabel}</h2>
+    <h2>${label}</h2>
     <div class="topbar-right">
       <span class="topbar-date">${dateStr}</span>
-      <button class="btn btn-outline" onclick="toggleCompletedVisibility()">${showCompleted ? 'Hide Completed' : 'Show Completed'}</button>
+      ${currentView==='queue'?`<button class="btn btn-outline" onclick="toggleCompletedVisibility()">${showCompleted?'Hide Done':'Show Done'}</button>`:''}
       <button class="btn btn-primary" onclick="openAddModal()">+ Add Task</button>
     </div>
   `;
 }
 
 function renderStats() {
-  const active = allTasks.filter(t => !['done','cancelled'].includes(t.status)).length;
-  const overdue = allTasks.filter(t => t.due_date && t.due_date < today && !['done','cancelled'].includes(t.status)).length;
-  const doneThisWeek = allTasks.filter(t => {
-    if (t.status !== 'done' || !t.completed_at) return false;
-    const d = new Date(t.completed_at);
-    const now = new Date();
-    const weekAgo = new Date(now - 7 * 86400000);
-    return d >= weekAgo;
+  const counts = getCounts();
+  const overdue = allTasks.filter(t=>t.due_date&&t.due_date<today&&isOpen(t)&&!isSubtask(t)).length;
+  const doneWeek = allTasks.filter(t=>{
+    if(t.status!=='done'||!t.completed_at) return false;
+    return (Date.now()-new Date(t.completed_at).getTime())<7*86400000;
   }).length;
-  const inbox = allTasks.filter(t => t.status === 'inbox').length;
-
   document.getElementById('statsBar').innerHTML = `
-    <div class="stat-card"><div class="stat-label">Active</div><div class="stat-value">${active}</div><div class="stat-sub">${inbox} in inbox</div></div>
-    <div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value ${overdue > 0 ? 'red' : ''}">${overdue}</div><div class="stat-sub">${overdue > 0 ? 'Needs attention' : 'All clear'}</div></div>
-    <div class="stat-card"><div class="stat-label">Done This Week</div><div class="stat-value green">${doneThisWeek}</div><div class="stat-sub">Keep going</div></div>
-    <div class="stat-card"><div class="stat-label">Waiting On</div><div class="stat-value">${allTasks.filter(t=>t.status==='waiting').length}</div><div class="stat-sub">Blocked items</div></div>
-  `;
-}
-
-function renderTaskItem(t) {
-  const isDone = t.status === 'done';
-  const isOverdue = t.due_date && t.due_date < today && !isDone;
-  const isDueToday = t.due_date === today;
-  
-  let dueLabel = '';
-  if (isOverdue) dueLabel = `<span class="task-due overdue">Overdue · ${t.due_date}</span>`;
-  else if (isDueToday) dueLabel = `<span class="task-due" style="color:#d97706;font-weight:600">Due today</span>`;
-  else if (t.due_date) dueLabel = `<span class="task-due">Due ${t.due_date}</span>`;
-  
-  const effPriority = effectivePriority(t);
-  const type = isReminder(t) ? 'reminder' : 'task';
-
-  return `
-    <li class="task-item">
-      <div class="task-check ${isDone ? 'done' : ''}" onclick="event.stopPropagation();toggleDone('${t.id}',${isDone})"></div>
-      <div class="task-body" onclick="openDetail('${t.id}')" style="cursor:pointer">
-        <div class="task-title ${isDone ? 'struck' : ''}">${esc(t.title)}</div>
-        ${t.description ? `<div class="task-desc">${esc(t.description)}</div>` : ''}
-        <div class="task-meta">
-          <span class="tag ${PRIO_TAG[effPriority]}">${effPriority}</span>
-          ${t.priority !== effPriority ? `<span class="tag tag-src">set: ${t.priority}</span>` : ''}
-          <span class="tag ${type === 'reminder' ? 'tag-type-reminder' : 'tag-type-task'}">${type === 'reminder' ? '🔔 reminder' : '✅ task'}</span>
-          <span class="tag tag-cat">${t.category}</span>
-          ${t.source ? `<span class="tag tag-src">${SRC_ICON[t.source] || ''} ${t.source}</span>` : ''}
-          ${t.source === 'spark-form' ? `<a href="comps.html?id=${t.notes && t.notes.match(/request_id:([a-f0-9-]+)/)?.[1] || ''}" onclick="event.stopPropagation()" class="tag" style="background:#E3FB61;color:#141B3A;font-weight:700;text-decoration:none">⚡ View Comps →</a>` : ''}
-          ${dueLabel}
-          ${t.assigned_to && t.assigned_to !== 'neil' ? `<span class="task-due">→ ${t.assigned_to}</span>` : ''}
-        </div>
-      </div>
-      ${t.estimated_minutes ? `<span class="task-est">~${t.estimated_minutes}m</span>` : ''}
-    </li>
+    <div class="stat-card"><div class="stat-label">Inbox</div><div class="stat-value">${counts.inbox}</div><div class="stat-sub">To review</div></div>
+    <div class="stat-card"><div class="stat-label">Today</div><div class="stat-value">${counts.today}</div><div class="stat-sub">In progress</div></div>
+    <div class="stat-card"><div class="stat-label">Overdue</div><div class="stat-value ${overdue>0?'red':''}">${overdue}</div><div class="stat-sub">${overdue>0?'Needs attention':'All clear'}</div></div>
+    <div class="stat-card"><div class="stat-label">Done This Week</div><div class="stat-value green">${doneWeek}</div><div class="stat-sub">Keep going</div></div>
   `;
 }
 
 function renderContent() {
-  const tasks = getViewTasks(currentView);
-  
+  let tasks;
+  switch(currentView) {
+    case 'inbox': tasks = getInbox(); break;
+    case 'today': tasks = getToday(); break;
+    case 'queue': tasks = getQueue(); break;
+    default: tasks = [];
+  }
+
   if (tasks.length === 0) {
-    document.getElementById('content').innerHTML = `<div class="panel"><div class="empty">🎯 Nothing here. You\'re all caught up!</div></div>`;
+    const msgs = { inbox:'📥 Inbox clear — nothing to review.', today:'🎯 Today is clear.', queue:'📋 Queue is empty.' };
+    document.getElementById('content').innerHTML = `<div class="panel"><div class="empty">${msgs[currentView]||'Nothing here.'}</div></div>`;
     return;
   }
 
   if (currentView === 'today') {
-    const reminders = tasks.filter(t => isReminder(t));
-    const work = tasks.filter(t => !isReminder(t));
+    // Split: projects, tasks, reminders
+    const projects = tasks.filter(t => isProject(t));
+    const reminders = tasks.filter(t => isReminder(t) && !isProject(t));
+    const work = tasks.filter(t => !isProject(t) && !isReminder(t));
 
     let html = '';
-    html += renderSection('🎯 Today — Tasks', work);
-    if (reminders.length) html += renderSection('🔔 Today — Reminders', reminders);
+    if (projects.length) html += renderProjectCards(projects);
+    if (work.length) html += renderSection('🎯 Tasks', work);
+    if (reminders.length) html += renderSection('🔔 Reminders', reminders);
     document.getElementById('content').innerHTML = html;
   } else {
-    document.getElementById('content').innerHTML = renderSection(
-      VIEWS.find(v => v.id === currentView)?.label || 'Tasks',
-      tasks
-    );
+    // Inbox and Queue: flat list, but projects show as project cards
+    const projects = tasks.filter(t => isProject(t));
+    const flat = tasks.filter(t => !isProject(t));
+
+    let html = '';
+    if (projects.length) html += renderProjectCards(projects);
+    if (flat.length) html += renderSection(VIEWS.find(v=>v.id===currentView)?.label||'Tasks', flat);
+    document.getElementById('content').innerHTML = html;
   }
+}
+
+function renderProjectCards(projects) {
+  return projects.map(p => {
+    const subs = subtasksOf(p.id).sort((a,b) => {
+      const aDone = a.status==='done'?1:0, bDone=b.status==='done'?1:0;
+      if(aDone!==bDone) return aDone-bDone;
+      return priorityScore(a)-priorityScore(b);
+    });
+    const done = subs.filter(s=>s.status==='done').length;
+    const total = subs.length;
+    const pct = total>0 ? Math.round(done/total*100) : 0;
+
+    // Determine which subtasks are "today" (highlighted)
+    const todaySubIds = new Set();
+    subs.forEach(s => {
+      if(isOpen(s) && (s.scheduled_date===today || (s.due_date && s.due_date<=today))) todaySubIds.add(s.id);
+    });
+
+    return `
+      <div class="project-card">
+        <div class="project-header" onclick="openDetail('${p.id}')">
+          <span class="project-icon">🔷</span>
+          <span class="project-name">${esc(p.title)}</span>
+          <span class="project-progress">${done}/${total}
+            <span class="project-progress-bar"><span class="project-progress-fill" style="width:${pct}%"></span></span>
+          </span>
+          <span class="tag ${PRIO_TAG[p.priority]}">${p.priority}</span>
+        </div>
+        ${subs.length ? `<div class="project-subtasks"><ul class="task-list">
+          ${subs.map(s => {
+            const highlighted = todaySubIds.has(s.id);
+            const notToday = !highlighted && s.status!=='done';
+            return `<li class="task-item ${highlighted?'highlighted':''} ${notToday?'not-today':''}">
+              <div class="task-check ${s.status==='done'?'done':''}" onclick="event.stopPropagation();toggleDone('${s.id}',${s.status==='done'})"></div>
+              <div class="task-body" onclick="openDetail('${s.id}')" style="cursor:pointer">
+                <div class="task-title ${s.status==='done'?'struck':''}">${esc(s.title)}</div>
+                ${s.due_date?`<span class="task-due ${s.due_date<today&&s.status!=='done'?'overdue':''}">${s.due_date<=today?(s.due_date<today?'Overdue':'Due today'):'Due '+s.due_date}</span>`:''}
+              </div>
+            </li>`;
+          }).join('')}
+        </ul></div>` : `<div style="padding:12px 18px;color:var(--text-light);font-size:12px;">No subtasks yet. Open project to add.</div>`}
+      </div>
+    `;
+  }).join('');
 }
 
 function renderSection(title, tasks) {
   if (!tasks.length) return '';
-  return `
-    <div class="panel">
-      <div class="panel-header"><h3>${title}</h3><span class="panel-count">${tasks.length}</span></div>
-      <ul class="task-list">${tasks.map(renderTaskItem).join('')}</ul>
+  return `<div class="panel">
+    <div class="panel-header"><h3>${title}</h3><span class="panel-count">${tasks.length}</span></div>
+    <ul class="task-list">${tasks.map(renderTaskItem).join('')}</ul>
+  </div>`;
+}
+
+function renderTaskItem(t) {
+  const isDone = t.status==='done';
+  const isOverdue = t.due_date && t.due_date<today && !isDone;
+  const isDueToday = t.due_date===today;
+  let dueLabel = '';
+  if(isOverdue) dueLabel=`<span class="task-due overdue">Overdue · ${t.due_date}</span>`;
+  else if(isDueToday) dueLabel=`<span class="task-due" style="color:#d97706;font-weight:600">Due today</span>`;
+  else if(t.due_date) dueLabel=`<span class="task-due">Due ${t.due_date}</span>`;
+
+  const type = getType(t);
+  const typeBadge = type==='reminder' ? '<span class="tag tag-type-reminder">🔔 reminder</span>'
+    : type==='project' ? '<span class="tag tag-type-project">🔷 project</span>'
+    : '<span class="tag tag-type-task">✅ task</span>';
+
+  return `<li class="task-item">
+    <div class="task-check ${isDone?'done':''}" onclick="event.stopPropagation();toggleDone('${t.id}',${isDone})"></div>
+    <div class="task-body" onclick="openDetail('${t.id}')" style="cursor:pointer">
+      <div class="task-title ${isDone?'struck':''}">${esc(t.title)}</div>
+      ${t.description?`<div class="task-desc">${esc(t.description)}</div>`:''}
+      <div class="task-meta">
+        <span class="tag ${PRIO_TAG[t.priority]}">${t.priority}</span>
+        ${typeBadge}
+        <span class="tag tag-cat">${t.category}</span>
+        ${t.source?`<span class="tag tag-src">${SRC_ICON[t.source]||''} ${t.source}</span>`:''}
+        ${t.source==='spark-form'?`<a href="comps.html?id=${(t.notes||'').match(/request_id:([a-f0-9-]+)/)?.[1]||''}" onclick="event.stopPropagation()" class="tag" style="background:#E3FB61;color:#141B3A;font-weight:700;text-decoration:none">⚡ Comps →</a>`:''}
+        ${dueLabel}
+        ${t.assigned_to&&t.assigned_to!=='neil'?`<span class="task-due">→ ${t.assigned_to}</span>`:''}
+      </div>
     </div>
-  `;
+    ${t.estimated_minutes?`<span class="task-est">~${t.estimated_minutes}m</span>`:''}
+  </li>`;
 }
 
-function render() {
-  renderSidebar();
-  renderTopbar();
-  renderStats();
-  renderContent();
-}
-
-function switchView(view) {
-  currentView = view;
-  render();
-}
-
-function toggleCompletedVisibility() {
-  showCompleted = !showCompleted;
-  render();
-}
+// --- Actions ---
+function switchView(v) { currentView=v; render(); }
+function toggleCompletedVisibility() { showCompleted=!showCompleted; render(); }
 
 function filterCategory(cat) {
-  // Temporary: show all tasks in that category
-  currentView = 'all';
-  render();
-  // Then filter in content
-  const tasks = allTasks.filter(t => t.category === cat && !['done','cancelled'].includes(t.status))
-    .sort((a, b) => priorityScore(a) - priorityScore(b));
-  document.getElementById('content').innerHTML = renderSection(
-    `${cat.charAt(0).toUpperCase()+cat.slice(1)} Tasks`, tasks
-  );
+  currentView='queue'; render();
+  const tasks=allTasks.filter(t=>t.category===cat&&isOpen(t)&&!isSubtask(t)).sort((a,b)=>priorityScore(a)-priorityScore(b));
+  document.getElementById('content').innerHTML = renderSection(`${cat[0].toUpperCase()+cat.slice(1)} Tasks`, tasks);
 }
 
-async function toggleDone(id, wasDone) {
-  const newStatus = wasDone ? 'active' : 'done';
-  const update = { status: newStatus };
-  if (!wasDone) update.completed_at = new Date().toISOString();
-  else update.completed_at = null;
-  
-  const { error } = await sb.from('tasks').update(update).eq('id', id);
-  if (error) { console.error(error); return; }
-  
-  // Update local
-  const t = allTasks.find(t => t.id === id);
-  if (t) { t.status = newStatus; t.completed_at = update.completed_at; }
+async function toggleDone(id,wasDone) {
+  const newStatus=wasDone?'active':'done';
+  const update={status:newStatus};
+  if(!wasDone) update.completed_at=new Date().toISOString(); else update.completed_at=null;
+  const {error}=await sb.from('tasks').update(update).eq('id',id);
+  if(error){console.error(error);return;}
+  const t=allTasks.find(t=>t.id===id);
+  if(t){t.status=newStatus;t.completed_at=update.completed_at;}
+
+  // If all subtasks done, auto-complete parent project
+  if(!wasDone && t && t.depends_on) {
+    const parent = allTasks.find(p=>p.id===t.depends_on);
+    if(parent && isProject(parent)) {
+      const subs = subtasksOf(parent.id);
+      if(subs.length && subs.every(s=>s.status==='done')) {
+        await sb.from('tasks').update({status:'done',completed_at:new Date().toISOString()}).eq('id',parent.id);
+        parent.status='done'; parent.completed_at=new Date().toISOString();
+      }
+    }
+  }
   render();
 }
 
 function openDetail(id) {
-  const t = allTasks.find(t => t.id === id);
-  if (!t) return;
-  
+  const t=allTasks.find(t=>t.id===id);
+  if(!t) return;
+  const type=getType(t);
+  const parentProject = t.depends_on ? allTasks.find(p=>p.id===t.depends_on) : null;
+
+  let subtaskHtml = '';
+  if(isProject(t)) {
+    const subs=subtasksOf(t.id);
+    subtaskHtml = `
+      <div class="detail-field"><label>Subtasks (${subs.filter(s=>s.status==='done').length}/${subs.length})</label>
+        <ul style="list-style:none;padding:0;">
+          ${subs.map(s=>`<li style="padding:4px 0;font-size:12px;${s.status==='done'?'text-decoration:line-through;color:var(--text-light);':''}">
+            ${s.status==='done'?'✅':'⬜'} ${esc(s.title)}
+          </li>`).join('')}
+        </ul>
+        <button class="btn btn-outline btn-sm" onclick="openAddSubtask('${t.id}')" style="margin-top:8px;">+ Add Subtask</button>
+      </div>
+    `;
+  }
+
   document.getElementById('detailContent').innerHTML = `
+    ${parentProject?`<div style="font-size:11px;color:var(--blue);margin-bottom:8px;">🔷 ${esc(parentProject.title)}</div>`:''}
     <div class="detail-field"><label>Title</label>
-      <input value="${esc(t.title)}" onchange="updateField('${t.id}','title',this.value)" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;font-weight:600;color:var(--text);" />
+      <input value="${esc(t.title)}" onchange="updateField('${t.id}','title',this.value)" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;font-weight:600;" />
     </div>
     <div class="detail-field"><label>Description</label>
-      <textarea onchange="updateField('${t.id}','description',this.value)" style="width:100%;min-height:84px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;line-height:1.4;resize:vertical;">${esc(t.description || '')}</textarea>
+      <textarea onchange="updateField('${t.id}','description',this.value)" style="width:100%;min-height:84px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;line-height:1.4;resize:vertical;">${esc(t.description||'')}</textarea>
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="detail-field"><label>Status</label>
-        <select onchange="updateField('${t.id}','status',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;">
-          ${['inbox','active','scheduled','waiting','done','cancelled'].map(s => `<option value="${s}" ${t.status===s?'selected':''}>${s}</option>`).join('')}
+        <select onchange="updateField('${t.id}','status',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+          ${['inbox','active','scheduled','waiting','done','cancelled'].map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${s}</option>`).join('')}
         </select>
       </div>
       <div class="detail-field"><label>Priority</label>
-        <select onchange="updateField('${t.id}','priority',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;">
-          ${['critical','high','medium','low'].map(p => `<option value="${p}" ${t.priority===p?'selected':''}>${p}</option>`).join('')}
+        <select onchange="updateField('${t.id}','priority',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+          ${['critical','high','medium','low'].map(p=>`<option value="${p}" ${t.priority===p?'selected':''}>${p}</option>`).join('')}
         </select>
       </div>
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
-      <div class="detail-field"><label>Category</label><div class="val"><span class="tag tag-cat">${t.category}</span></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="detail-field"><label>Type</label>
-        <select onchange="updateType('${t.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;">
-          <option value="task" ${isReminder(t)?'':'selected'}>task</option>
-          <option value="reminder" ${isReminder(t)?'selected':''}>reminder</option>
+        <select onchange="updateType('${t.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+          <option value="task" ${type==='task'?'selected':''}>✅ Task</option>
+          <option value="reminder" ${type==='reminder'?'selected':''}>🔔 Reminder</option>
+          <option value="project" ${type==='project'?'selected':''}>🔷 Project</option>
+        </select>
+      </div>
+      <div class="detail-field"><label>Category</label>
+        <select onchange="updateField('${t.id}','category',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+          ${['business','marketing','hiring','finance','operations','tech','personal','facilities'].map(c=>`<option value="${c}" ${t.category===c?'selected':''}>${c}</option>`).join('')}
         </select>
       </div>
     </div>
-    <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="detail-field"><label>Due Date</label>
-        <input type="date" value="${t.due_date || ''}" onchange="updateField('${t.id}','due_date',this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;" />
+        <input type="date" value="${t.due_date||''}" onchange="updateField('${t.id}','due_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
       </div>
       <div class="detail-field"><label>Scheduled</label>
-        <input type="date" value="${t.scheduled_date || ''}" onchange="updateField('${t.id}','scheduled_date',this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;" />
+        <input type="date" value="${t.scheduled_date||''}" onchange="updateField('${t.id}','scheduled_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
       </div>
     </div>
-    <div class="detail-field"><label>List Placement</label>
-      <select onchange="updatePlacement('${t.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-family:inherit;font-size:12px;">
-        <option value="auto" ${placementOverride(t)==='auto'?'selected':''}>Auto (context-driven)</option>
-        <option value="today" ${placementOverride(t)==='today'?'selected':''}>Force Today</option>
-        <option value="next" ${placementOverride(t)==='next'?'selected':''}>Force Next</option>
-      </select>
-    </div>
-    <div class="detail-field"><label>Assigned To</label><div class="val">${t.assigned_to || 'neil'}</div></div>
-    ${t.notes ? `<div class="detail-field"><label>Notes</label><div class="val">${esc(t.notes)}</div></div>` : ''}
-    <div class="detail-field"><label>Created</label><div class="val">${new Date(t.created_at).toLocaleString()} by ${t.created_by}</div></div>
-    ${t.completed_at ? `<div class="detail-field"><label>Completed</label><div class="val">${new Date(t.completed_at).toLocaleString()}</div></div>` : ''}
-    <div style="margin-top:20px; display:flex; gap:8px;">
-      ${t.status !== 'done' ? `<button class="btn btn-primary btn-sm" onclick="toggleDone('${t.id}',false);closeDetail();">✓ Mark Done</button>` : ''}
-      <button class="btn btn-outline btn-sm" onclick="deleteTask('${t.id}')">🗑 Delete</button>
+    <div class="detail-field"><label>Assigned To</label><div style="font-size:13px;">${t.assigned_to||'neil'}</div></div>
+    ${t.notes?`<div class="detail-field"><label>Notes</label><div style="font-size:12px;white-space:pre-wrap;">${esc(t.notes)}</div></div>`:''}
+    ${subtaskHtml}
+    <div class="detail-field"><label>Created</label><div style="font-size:12px;">${new Date(t.created_at).toLocaleString()} by ${t.created_by}</div></div>
+    ${t.completed_at?`<div class="detail-field"><label>Completed</label><div style="font-size:12px;">${new Date(t.completed_at).toLocaleString()}</div></div>`:''}
+    <div style="margin-top:20px;display:flex;gap:8px;">
+      ${t.status!=='done'?`<button class="btn btn-primary btn-sm" onclick="toggleDone('${t.id}',false);closeDetail();">✓ Done</button>`:''}
+      <button class="btn btn-outline btn-sm" onclick="moveToToday('${t.id}')">→ Move to Today</button>
+      <button class="btn btn-outline btn-sm" onclick="moveToQueue('${t.id}')">→ Queue</button>
+      <button class="btn btn-outline btn-sm" style="color:var(--coral);" onclick="deleteTask('${t.id}')">🗑</button>
     </div>
   `;
   document.getElementById('detailPanel').classList.add('show');
@@ -621,95 +582,124 @@ function closeDetail() {
   document.getElementById('detailOverlay').classList.remove('show');
 }
 
-async function updateType(id, typeValue) {
-  const t = allTasks.find(x => x.id === id) || {};
-  let tags = Array.isArray(t.tags) ? [...t.tags] : [];
-  tags = tags.filter(x => String(x).toLowerCase() !== 'reminder');
-  if (typeValue === 'reminder') tags.push('reminder');
-  await updateField(id, 'tags', tags.length ? tags : null);
+async function moveToToday(id) {
+  // Set scheduled_date to today and status to active
+  await updateField(id,'scheduled_date',today);
+  if(allTasks.find(t=>t.id===id)?.status==='inbox') await updateField(id,'status','active');
+  closeDetail();
 }
 
-async function updatePlacement(id, placement) {
-  const t = allTasks.find(x => x.id === id) || {};
-  let tags = Array.isArray(t.tags) ? [...t.tags] : [];
-  tags = tags.filter(x => !['force-today','force-next'].includes(String(x).toLowerCase()));
-  if (placement === 'today') tags.push('force-today');
-  if (placement === 'next') tags.push('force-next');
-  await updateField(id, 'tags', tags.length ? tags : null);
-}
-
-async function updateField(id, field, value) {
-  if (field === 'title' && !String(value || '').trim()) {
-    alert('Title cannot be empty');
-    return;
+async function moveToQueue(id) {
+  // Clear scheduled_date, set status to active
+  await updateField(id,'scheduled_date',null);
+  if(allTasks.find(t=>t.id===id)?.status==='inbox') await updateField(id,'status','active');
+  // Remove force-today tag
+  const t=allTasks.find(t=>t.id===id);
+  if(t) {
+    let tgs=Array.isArray(t.tags)?[...t.tags]:[];
+    tgs=tgs.filter(x=>String(x).toLowerCase()!=='force-today');
+    await updateField(id,'tags',tgs.length?tgs:null);
   }
+  closeDetail();
+}
 
-  const update = {};
-  update[field] = field === 'title' ? String(value).trim() : value;
-  if (field === 'status' && value === 'done') update.completed_at = new Date().toISOString();
-  if (field === 'status' && value !== 'done') update.completed_at = null;
+async function updateType(id, typeValue) {
+  const t=allTasks.find(x=>x.id===id)||{};
+  let tgs=Array.isArray(t.tags)?[...t.tags]:[];
+  tgs=tgs.filter(x=>!['reminder','project'].includes(String(x).toLowerCase()));
+  if(typeValue==='reminder') tgs.push('reminder');
+  if(typeValue==='project') tgs.push('project');
+  await updateField(id,'tags',tgs.length?tgs:null);
+}
 
-  const { error } = await sb.from('tasks').update(update).eq('id', id);
-  if (error) { console.error(error); return; }
-
-  const t = allTasks.find(t => t.id === id);
-  if (t) { t[field] = update[field]; t.completed_at = update.completed_at ?? t.completed_at; }
+async function updateField(id,field,value) {
+  if(field==='title'&&!String(value||'').trim()){alert('Title cannot be empty');return;}
+  const update={};
+  update[field]=field==='title'?String(value).trim():value;
+  if(field==='status'&&value==='done') update.completed_at=new Date().toISOString();
+  if(field==='status'&&value!=='done') update.completed_at=null;
+  const {error}=await sb.from('tasks').update(update).eq('id',id);
+  if(error){console.error(error);return;}
+  const t=allTasks.find(t=>t.id===id);
+  if(t){t[field]=update[field];if(update.completed_at!==undefined)t.completed_at=update.completed_at;}
   render();
 }
 
 async function deleteTask(id) {
-  if (!confirm('Delete this task?')) return;
-  const { error } = await sb.from('tasks').delete().eq('id', id);
-  if (error) { console.error(error); return; }
-  allTasks = allTasks.filter(t => t.id !== id);
-  closeDetail();
-  render();
+  if(!confirm('Delete this task?')) return;
+  await sb.from('tasks').delete().eq('id',id);
+  allTasks=allTasks.filter(t=>t.id!==id);
+  closeDetail(); render();
 }
 
 function openAddModal() { document.getElementById('addModal').classList.add('show'); document.getElementById('newTitle').focus(); }
 function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
 
 async function addTask() {
-  const title = document.getElementById('newTitle').value.trim();
-  if (!title) return;
-  
-  const task = {
+  const title=document.getElementById('newTitle').value.trim();
+  if(!title) return;
+  const typeVal=document.getElementById('newType').value;
+  let tgs=[];
+  if(typeVal==='reminder') tgs.push('reminder');
+  if(typeVal==='project') tgs.push('project');
+
+  const task={
     title,
-    description: document.getElementById('newDesc').value.trim() || null,
+    description: document.getElementById('newDesc').value.trim()||null,
     priority: document.getElementById('newPriority').value,
     category: document.getElementById('newCategory').value,
-    energy_level: document.getElementById('newEnergy').value,
-    due_date: document.getElementById('newDue').value || null,
+    due_date: document.getElementById('newDue').value||null,
     status: 'inbox',
     source: 'manual',
     assigned_to: 'neil',
     created_by: 'neil',
+    tags: tgs.length?tgs:null,
   };
-  
-  const { data, error } = await sb.from('tasks').insert(task).select();
-  if (error) { console.error(error); alert('Error adding task'); return; }
-  
-  if (data) allTasks.unshift(data[0]);
+  const {data,error}=await sb.from('tasks').insert(task).select();
+  if(error){console.error(error);alert('Error adding task');return;}
+  if(data) allTasks.unshift(data[0]);
   closeAddModal();
-  document.getElementById('newTitle').value = '';
-  document.getElementById('newDesc').value = '';
-  document.getElementById('newDue').value = '';
+  document.getElementById('newTitle').value='';
+  document.getElementById('newDesc').value='';
+  document.getElementById('newDue').value='';
   render();
 }
 
-function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function openAddSubtask(parentId) {
+  closeDetail();
+  const title=prompt('Subtask title:');
+  if(!title||!title.trim()) return;
+  addSubtask(parentId,title.trim());
+}
 
-// Keyboard shortcuts
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeAddModal(); closeDetail(); }
-  if (e.key === 'n' && !e.metaKey && !e.ctrlKey && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) { e.preventDefault(); openAddModal(); }
+async function addSubtask(parentId,title) {
+  const parent=allTasks.find(t=>t.id===parentId);
+  const task={
+    title,
+    priority: parent?.priority||'medium',
+    category: parent?.category||'business',
+    status: 'active',
+    source: 'manual',
+    assigned_to: 'neil',
+    created_by: 'neil',
+    depends_on: parentId,
+  };
+  const {data,error}=await sb.from('tasks').insert(task).select();
+  if(error){console.error(error);return;}
+  if(data) allTasks.unshift(data[0]);
+  render();
+  openDetail(parentId);
+}
+
+function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeAddModal();closeDetail();}
+  if(e.key==='n'&&!e.metaKey&&!e.ctrlKey&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){e.preventDefault();openAddModal();}
 });
 
-// Init
 loadTasks();
-
-// Auto-refresh every 60 seconds
-setInterval(loadTasks, 60000);
+setInterval(loadTasks,60000);
 </script>
 </body>
 </html>
