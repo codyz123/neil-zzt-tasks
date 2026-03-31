@@ -178,6 +178,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
 let sparkProjects = [];
+let requestsWithComps = new Set();
 let currentView = 'inbox';
 let showCompleted = false;
 const today = new Date().toISOString().slice(0, 10);
@@ -271,6 +272,12 @@ async function loadSparkProjects() {
     .select('id,request_types,requester_email,status,created_at')
     .order('created_at', { ascending: false }).limit(20);
   sparkProjects = (data || []).filter(r => !['delivered','cancelled','archived','done'].includes(String(r.status||'').toLowerCase()));
+
+  // Load which requests actually have comps
+  const { data: comps } = await sb.from('spark_comps')
+    .select('request_id')
+    .not('status','eq','rejected');
+  requestsWithComps = new Set((comps||[]).map(c=>c.request_id));
 }
 
 // --- Render ---
@@ -430,7 +437,7 @@ function renderTaskItem(t) {
         <span class="tag ${PRIO_TAG[t.priority]}">${t.priority}</span>
         ${typeBadge}
         ${t.source?`<span class="tag tag-src">${SRC_ICON[t.source]||''} ${t.source}</span>`:''}
-        ${t.source==='spark-form'?`<a href="comps.html?id=${(t.notes||'').match(/request_id:([a-f0-9-]+)/)?.[1]||''}" onclick="event.stopPropagation()" class="tag" style="background:#E3FB61;color:#141B3A;font-weight:700;text-decoration:none">⚡ Comps →</a>`:''}
+        ${(()=>{ if(t.source!=='spark-form') return ''; const rid=(t.notes||'').match(/request_id:([a-f0-9-]+)/)?.[1]||''; return rid && requestsWithComps.has(rid) ? `<a href="comps.html?id=${rid}" onclick="event.stopPropagation()" class="tag" style="background:#E3FB61;color:#141B3A;font-weight:700;text-decoration:none">⚡ Comps →</a>` : ''; })()}
         ${dueLabel}
         ${t.assigned_to&&t.assigned_to!=='neil'?`<span class="task-due">→ ${t.assigned_to}</span>`:''}
       </div>
