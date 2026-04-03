@@ -279,11 +279,7 @@ async function loadSparkProjects() {
     .order('created_at', { ascending: false }).limit(20);
   sparkProjects = (data || []).filter(r => !['delivered','cancelled','archived','done'].includes(String(r.status||'').toLowerCase()));
 
-  // Load which requests actually have comps
-  const { data: comps } = await sb.from('spark_comps')
-    .select('request_id')
-    .not('status','eq','rejected');
-  requestsWithComps = new Set((comps||[]).map(c=>c.request_id));
+  // Comps tab removed — Spark requests tracked as tasks/projects
 }
 
 // --- Render ---
@@ -302,16 +298,10 @@ function renderSidebar() {
       </div>
     `).join('')}
     ${overdue>0?`<div class="nav-item" style="color:var(--coral);" onclick="switchView('today')">⚠️ Overdue <span class="nav-badge">${overdue}</span></div>`:''}
-    <div class="nav-section">Spark Comps</div>
-    <a class="nav-item" href="comps.html" style="text-decoration:none;color:inherit;">
-      <span>⚡ Comps Hub</span>
-      <span class="nav-badge" style="background:#E3FB61;color:#141B3A">${sparkProjects.length}</span>
-    </a>
-
   `;
   document.getElementById('mobileTabs').innerHTML = VIEWS.map(v =>
     `<span class="tab ${currentView===v.id?'active':''}" onclick="switchView('${v.id}')">${v.icon} ${v.label}</span>`
-  ).join('') + `<a class="tab" href="comps.html" style="text-decoration:none;color:inherit;">⚡ Comps</a>`;
+  ).join('');
 }
 
 function renderTopbar() {
@@ -443,9 +433,7 @@ function renderTaskItem(t) {
         <span class="tag ${PRIO_TAG[t.priority]}">${t.priority}</span>
         ${typeBadge}
         ${t.source?`<span class="tag tag-src">${SRC_ICON[t.source]||''} ${t.source}</span>`:''}
-        ${(()=>{ if(t.source!=='spark-form') return ''; const rid=(t.notes||'').match(/request_id:([a-f0-9-]+)/)?.[1]||''; return rid && requestsWithComps.has(rid) ? `<a href="comps.html?id=${rid}" onclick="event.stopPropagation()" class="tag" style="background:#E3FB61;color:#141B3A;font-weight:700;text-decoration:none">⚡ Comps →</a>` : ''; })()}
         ${dueLabel}
-        ${t.assigned_to&&t.assigned_to!=='neil'?`<span class="task-due">→ ${t.assigned_to}</span>`:''}
       </div>
     </div>
     ${t.estimated_minutes?`<span class="task-est">~${t.estimated_minutes}m</span>`:''}
@@ -536,8 +524,9 @@ function openDetail(id) {
     <div class="detail-field"><label>Due Date</label>
       <input type="date" value="${t.due_date||''}" onchange="updateField('${t.id}','due_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
     </div>
-    <div class="detail-field"><label>Assigned To</label><div style="font-size:13px;">${t.assigned_to||'neil'}</div></div>
-    ${t.notes?`<div class="detail-field"><label>Notes</label><div style="font-size:12px;white-space:pre-wrap;">${esc(t.notes)}</div></div>`:''}
+    <div class="detail-field"><label>Notes</label>
+      <textarea onchange="updateField('${t.id}','notes',this.value)" style="width:100%;min-height:80px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;line-height:1.4;resize:vertical;">${esc(t.notes||'')}</textarea>
+    </div>
     ${subtaskHtml}
     <div class="detail-field"><label>Created</label><div style="font-size:12px;">${new Date(t.created_at).toLocaleString()} by ${t.created_by}</div></div>
     ${t.completed_at?`<div class="detail-field"><label>Completed</label><div style="font-size:12px;">${new Date(t.completed_at).toLocaleString()}</div></div>`:''}
