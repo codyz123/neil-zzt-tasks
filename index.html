@@ -207,11 +207,16 @@ const SRC_ICON = { email: '📧', 'spark-form': '⚡', conversation: '💬', man
 function tags(t) { return Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : []; }
 function isReminder(t) { return tags(t).includes('reminder'); }
 function isProject(t) { return tags(t).includes('project'); }
-function isSubtask(t) { return !!t.depends_on; }
+function parentProjectId(t) {
+  if (!t) return null;
+  if (Array.isArray(t.depends_on)) return t.depends_on[0] || null;
+  return t.depends_on || null;
+}
+function isSubtask(t) { return !!parentProjectId(t); }
 function getType(t) { if (isProject(t)) return 'project'; if (isReminder(t)) return 'reminder'; return 'task'; }
 function isOpen(t) { return !['done','cancelled'].includes(t.status); }
 function priorityScore(t) { return PRIO_ORDER[t.priority] ?? 2; }
-function subtasksOf(parentId) { return allTasks.filter(t => t.depends_on === parentId); }
+function subtasksOf(parentId) { return allTasks.filter(t => parentProjectId(t) === parentId); }
 function projectOptionsHtml(selectedId = '') {
   const projects = allTasks.filter(t => isProject(t)).sort((a,b) => (a.title||'').localeCompare(b.title||''));
   const opts = ['<option value="">None</option>'];
@@ -472,8 +477,9 @@ async function toggleDone(id,wasDone) {
   if(t){t.status=newStatus;t.completed_at=update.completed_at;}
 
   // If all subtasks done, auto-complete parent project
-  if(!wasDone && t && t.depends_on) {
-    const parent = allTasks.find(p=>p.id===t.depends_on);
+  const parentId = parentProjectId(t);
+  if(!wasDone && t && parentId) {
+    const parent = allTasks.find(p=>p.id===parentId);
     if(parent && isProject(parent)) {
       const subs = subtasksOf(parent.id);
       if(subs.length && subs.every(s=>s.status==='done')) {
@@ -489,7 +495,8 @@ function openDetail(id) {
   const t=allTasks.find(t=>t.id===id);
   if(!t) return;
   const type=getType(t);
-  const parentProject = t.depends_on ? allTasks.find(p=>p.id===t.depends_on) : null;
+  const parentId = parentProjectId(t);
+  const parentProject = parentId ? allTasks.find(p=>p.id===parentId) : null;
 
   let subtaskHtml = '';
   if(isProject(t)) {
@@ -535,7 +542,7 @@ function openDetail(id) {
     </div>
     ${!isProject(t) ? `<div class="detail-field"><label>Parent Project</label>
       <select onchange="setParentProject('${t.id}', this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
-        ${projectOptionsHtml(t.depends_on || '')}
+        ${projectOptionsHtml(parentProjectId(t) || '')}
       </select>
     </div>` : ''}
     <div class="detail-field"><label>Due Date</label>
@@ -597,7 +604,7 @@ async function setParentProject(taskId, parentId) {
   const t = allTasks.find(x=>x.id===taskId);
   if (!t) return;
   if (parentId === taskId) { alert('A task cannot be its own parent project.'); return; }
-  const update = { depends_on: parentId || null };
+  const update = { depends_on: parentId ? [parentId] : null };
   const { error } = await sb.from('tasks').update(update).eq('id', taskId);
   if (error) { console.error(error); alert('Could not update parent project.'); return; }
   t.depends_on = update.depends_on;
@@ -653,7 +660,7 @@ async function addTask() {
     assigned_to: 'neil',
     created_by: 'neil',
     tags: tgs.length?tgs:null,
-    depends_on: parentProjectId,
+    depends_on: parentProjectId ? [parentProjectId] : null,
   };
   const {data,error}=await sb.from('tasks').insert(task).select();
   if(error){console.error(error);alert('Error adding task');return;}
@@ -683,7 +690,7 @@ async function addSubtask(parentId,title) {
     source: 'manual',
     assigned_to: 'neil',
     created_by: 'neil',
-    depends_on: parentId,
+    depends_on: [parentId],
   };
   const {data,error}=await sb.from('tasks').insert(task).select();
   if(error){console.error(error);return;}
