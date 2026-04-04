@@ -163,6 +163,10 @@
     <div>
       <label>Due Date</label><input type="date" id="newDue">
     </div>
+    <div>
+      <label>Add as subtask under project</label>
+      <select id="newParentProject"><option value="">None</option></select>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
       <button class="btn btn-primary" onclick="addTask()">Add Task</button>
@@ -208,6 +212,14 @@ function getType(t) { if (isProject(t)) return 'project'; if (isReminder(t)) ret
 function isOpen(t) { return !['done','cancelled'].includes(t.status); }
 function priorityScore(t) { return PRIO_ORDER[t.priority] ?? 2; }
 function subtasksOf(parentId) { return allTasks.filter(t => t.depends_on === parentId); }
+function projectOptionsHtml(selectedId = '') {
+  const projects = allTasks.filter(t => isProject(t)).sort((a,b) => (a.title||'').localeCompare(b.title||''));
+  const opts = ['<option value="">None</option>'];
+  projects.forEach(p => {
+    opts.push(`<option value="${p.id}" ${selectedId===p.id?'selected':''}>${esc(p.title)}</option>`);
+  });
+  return opts.join('');
+}
 
 function daysUntil(d) {
   if (!d) return null;
@@ -521,6 +533,11 @@ function openDetail(id) {
         <option value="project" ${type==='project'?'selected':''}>🔷 Project</option>
       </select>
     </div>
+    ${!isProject(t) ? `<div class="detail-field"><label>Parent Project</label>
+      <select onchange="setParentProject('${t.id}', this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+        ${projectOptionsHtml(t.depends_on || '')}
+      </select>
+    </div>` : ''}
     <div class="detail-field"><label>Due Date</label>
       <input type="date" value="${t.due_date||''}" onchange="updateField('${t.id}','due_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
     </div>
@@ -576,6 +593,18 @@ async function updateType(id, typeValue) {
   await updateField(id,'tags',tgs.length?tgs:null);
 }
 
+async function setParentProject(taskId, parentId) {
+  const t = allTasks.find(x=>x.id===taskId);
+  if (!t) return;
+  if (parentId === taskId) { alert('A task cannot be its own parent project.'); return; }
+  const update = { depends_on: parentId || null };
+  const { error } = await sb.from('tasks').update(update).eq('id', taskId);
+  if (error) { console.error(error); alert('Could not update parent project.'); return; }
+  t.depends_on = update.depends_on;
+  render();
+  openDetail(taskId);
+}
+
 async function updateField(id,field,value) {
   if(field==='title'&&!String(value||'').trim()){alert('Title cannot be empty');return;}
   const update={};
@@ -596,7 +625,12 @@ async function deleteTask(id) {
   closeDetail(); render();
 }
 
-function openAddModal() { document.getElementById('addModal').classList.add('show'); document.getElementById('newTitle').focus(); }
+function openAddModal() {
+  const sel = document.getElementById('newParentProject');
+  if (sel) sel.innerHTML = projectOptionsHtml('');
+  document.getElementById('addModal').classList.add('show');
+  document.getElementById('newTitle').focus();
+}
 function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
 
 async function addTask() {
@@ -607,17 +641,19 @@ async function addTask() {
   if(typeVal==='reminder') tgs.push('reminder');
   if(typeVal==='project') tgs.push('project');
 
+  const parentProjectId = document.getElementById('newParentProject').value || null;
   const task={
     title,
     description: document.getElementById('newDesc').value.trim()||null,
     priority: document.getElementById('newPriority').value,
     category: 'business',
     due_date: document.getElementById('newDue').value||null,
-    status: 'inbox',
+    status: parentProjectId ? 'active' : 'inbox',
     source: 'manual',
     assigned_to: 'neil',
     created_by: 'neil',
     tags: tgs.length?tgs:null,
+    depends_on: parentProjectId,
   };
   const {data,error}=await sb.from('tasks').insert(task).select();
   if(error){console.error(error);alert('Error adding task');return;}
@@ -626,6 +662,7 @@ async function addTask() {
   document.getElementById('newTitle').value='';
   document.getElementById('newDesc').value='';
   document.getElementById('newDue').value='';
+  document.getElementById('newParentProject').value='';
   render();
 }
 
