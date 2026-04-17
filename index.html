@@ -164,7 +164,7 @@
       <label>Due Date</label><input type="date" id="newDue">
     </div>
     <div>
-      <label>Add as subtask under project</label>
+      <label>Add as project task under project</label>
       <select id="newParentProject"><option value="">None</option></select>
     </div>
     <div class="modal-actions">
@@ -238,21 +238,17 @@ function getInbox() {
     .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
-// Today: status=active + tags include force-today, OR scheduled_date=today, OR due today/overdue + active
-// Plus: all reminders with due_date = today
-// Plus: projects that have subtasks scheduled for today
+// Today: show actionable items due/scheduled today across Tasks, Reminders, and Project Tasks.
+// Projects themselves stay in Queue as containers, not Today action items.
+// Manual queue override: force-queue keeps an item out of Today until explicitly moved back.
 function getToday() {
   const items = allTasks.filter(t => {
     if (!isOpen(t) || t.status === 'inbox') return false;
-    if (isSubtask(t)) return false; // subtasks render inside project cards
+    if (isProject(t)) return false;
+    if (tags(t).includes('force-queue')) return false;
     if (tags(t).includes('force-today')) return true;
     if (t.scheduled_date === today) return true;
     if (t.due_date && t.due_date <= today) return true;
-    // Projects: show if any subtask is scheduled today or due today
-    if (isProject(t)) {
-      const subs = subtasksOf(t.id);
-      return subs.some(s => isOpen(s) && (s.scheduled_date === today || (s.due_date && s.due_date <= today)));
-    }
     return false;
   });
   return items.sort((a,b) => priorityScore(a) - priorityScore(b));
@@ -502,13 +498,13 @@ function openDetail(id) {
   if(isProject(t)) {
     const subs=subtasksOf(t.id);
     subtaskHtml = `
-      <div class="detail-field"><label>Subtasks (${subs.filter(s=>s.status==='done').length}/${subs.length})</label>
+      <div class="detail-field"><label>Project Tasks (${subs.filter(s=>s.status==='done').length}/${subs.length})</label>
         <ul style="list-style:none;padding:0;">
           ${subs.map(s=>`<li style="padding:4px 0;font-size:12px;${s.status==='done'?'text-decoration:line-through;color:var(--text-light);':''}">
             ${s.status==='done'?'✅':'⬜'} ${esc(s.title)}
           </li>`).join('')}
         </ul>
-        <button class="btn btn-outline btn-sm" onclick="openAddSubtask('${t.id}')" style="margin-top:8px;">+ Add Subtask</button>
+        <button class="btn btn-outline btn-sm" onclick="openAddSubtask('${t.id}')" style="margin-top:8px;">+ Add Project Task</button>
       </div>
     `;
   }
@@ -572,20 +568,26 @@ function closeDetail() {
 
 async function moveToToday(id) {
   // Set scheduled_date to today and status to active
+  const t = allTasks.find(x=>x.id===id);
+  if (t) {
+    let tgs = Array.isArray(t.tags) ? [...t.tags] : [];
+    tgs = tgs.filter(x => !['force-queue'].includes(String(x).toLowerCase()));
+    await updateField(id,'tags',tgs.length ? tgs : null);
+  }
   await updateField(id,'scheduled_date',today);
   if(allTasks.find(t=>t.id===id)?.status==='inbox') await updateField(id,'status','active');
   closeDetail();
 }
 
 async function moveToQueue(id) {
-  // Clear scheduled_date, set status to active
+  // Clear scheduled_date, set status to active, and add force-queue override
   await updateField(id,'scheduled_date',null);
   if(allTasks.find(t=>t.id===id)?.status==='inbox') await updateField(id,'status','active');
-  // Remove force-today tag
   const t=allTasks.find(t=>t.id===id);
   if(t) {
     let tgs=Array.isArray(t.tags)?[...t.tags]:[];
-    tgs=tgs.filter(x=>String(x).toLowerCase()!=='force-today');
+    tgs=tgs.filter(x=>!['force-today','force-queue'].includes(String(x).toLowerCase()));
+    tgs.push('force-queue');
     await updateField(id,'tags',tgs.length?tgs:null);
   }
   closeDetail();
