@@ -186,6 +186,15 @@ const SUPABASE_URL = 'https://qqlqqknlqqdyukxoyyty.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbHFxa25scXFkeXVreG95eXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTYzOTQsImV4cCI6MjA4ODEzMjM5NH0.jZBd3dM1aNjRqDXxL0a3p0V8BPtfdZ8I4LaAKN4_1mk';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const APP_VERSION = '2026.04.17-item-model';
+const MODEL_KIND_PREFIX = 'kind:';
+const ITEM_KIND = {
+  PROJECT: 'project',
+  TASK: 'task',
+  REMINDER: 'reminder',
+  PROJECT_TASK: 'project_task',
+};
+
 let allTasks = [];
 let sparkProjects = [];
 let requestsWithComps = new Set();
@@ -202,86 +211,183 @@ const VIEWS = [
 const PRIO_ORDER = { critical: 0, high: 1, medium: 2, low: 3 };
 const PRIO_TAG = { critical: 'tag-critical', high: 'tag-high', medium: 'tag-medium', low: 'tag-low' };
 const SRC_ICON = { email: '📧', 'spark-form': '⚡', conversation: '💬', manual: '✏️', cron: '⚙️' };
+const TYPE_BADGE = {
+  [ITEM_KIND.TASK]: '<span class="tag tag-type-task">✅ task</span>',
+  [ITEM_KIND.REMINDER]: '<span class="tag tag-type-reminder">🔔 reminder</span>',
+  [ITEM_KIND.PROJECT]: '<span class="tag tag-type-project">🔷 project</span>',
+  [ITEM_KIND.PROJECT_TASK]: '<span class="tag tag-type-project">🧩 project task</span>',
+};
 
-// --- Helpers ---
-function tags(t) { return Array.isArray(t.tags) ? t.tags.map(x => String(x).toLowerCase()) : []; }
-function isReminder(t) { return tags(t).includes('reminder'); }
-function isProject(t) { return tags(t).includes('project'); }
-function parentProjectId(t) {
-  if (!t) return null;
-  if (Array.isArray(t.depends_on)) return t.depends_on[0] || null;
-  return t.depends_on || null;
+function rawTags(task) {
+  return Array.isArray(task?.tags) ? task.tags.map(tag => String(tag)) : [];
 }
-function isSubtask(t) { return !!parentProjectId(t); }
-function getType(t) { if (isProject(t)) return 'project'; if (isReminder(t)) return 'reminder'; return 'task'; }
-function isOpen(t) { return !['done','cancelled'].includes(t.status); }
-function priorityScore(t) { return PRIO_ORDER[t.priority] ?? 2; }
-function subtasksOf(parentId) { return allTasks.filter(t => parentProjectId(t) === parentId); }
+
+function tags(task) {
+  return rawTags(task).map(tag => tag.toLowerCase());
+}
+
+function getExplicitKindTag(task) {
+  return tags(task).find(tag => tag.startsWith(MODEL_KIND_PREFIX)) || null;
+}
+
+function getLegacyProjectId(task) {
+  if (!task) return null;
+  if (task.parent_id) return task.parent_id;
+  if (Array.isArray(task.depends_on)) return task.depends_on[0] || null;
+  return task.depends_on || null;
+}
+
+function inferItemKind(task, knownIds = null) {
+  const explicit = getExplicitKindTag(task);
+  if (explicit) {
+    const explicitKind = explicit.slice(MODEL_KIND_PREFIX.length);
+    if (Object.values(ITEM_KIND).includes(explicitKind)) return explicitKind;
+  }
+
+  const legacyTags = tags(task);
+  const projectId = getLegacyProjectId(task);
+  const hasValidProject = projectId && (!knownIds || knownIds.has(projectId));
+  if (hasValidProject) return ITEM_KIND.PROJECT_TASK;
+  if (legacyTags.includes('project')) return ITEM_KIND.PROJECT;
+  if (legacyTags.includes('reminder')) return ITEM_KIND.REMINDER;
+  return ITEM_KIND.TASK;
+}
+
+function normalizeTask(task, knownIds = null) {
+  const itemKind = inferItemKind(task, knownIds);
+  const projectId = itemKind === ITEM_KIND.PROJECT_TASK ? getLegacyProjectId(task) : null;
+  return {
+    ...task,
+    _itemKind: itemKind,
+    _projectId: projectId,
+    _isTopLevel: !projectId,
+  };
+}
+
+function normalizeTasks(tasks) {
+  const knownIds = new Set((tasks || []).map(task => task.id));
+  return (tasks || []).map(task => normalizeTask(task, knownIds));
+}
+
+function getTask(id) {
+  return allTasks.find(task => task.id === id) || null;
+}
+
+function isOpen(task) {
+  return !['done', 'cancelled'].includes(task.status);
+}
+
+function isProject(task) {
+  return task?._itemKind === ITEM_KIND.PROJECT;
+}
+
+function isReminder(task) {
+  return task?._itemKind === ITEM_KIND.REMINDER;
+}
+
+function isProjectTask(task) {
+  return task?._itemKind === ITEM_KIND.PROJECT_TASK;
+}
+
+function isTopLevel(task) {
+  return !!task?._isTopLevel;
+}
+
+function priorityScore(task) {
+  return PRIO_ORDER[task.priority] ?? 2;
+}
+
+function compareTasks(a, b) {
+  const prio = priorityScore(a) - priorityScore(b);
+  if (prio !== 0) return prio;
+  const aDue = a.due_date || '9999-12-31';
+  const bDue = b.due_date || '9999-12-31';
+  if (aDue !== bDue) return aDue.localeCompare(bDue);
+  return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+}
+
+function projectTasksOf(projectId) {
+  return allTasks.filter(task => task._projectId === projectId);
+}
+
 function projectOptionsHtml(selectedId = '') {
-  const projects = allTasks.filter(t => isProject(t)).sort((a,b) => (a.title||'').localeCompare(b.title||''));
+  const projects = allTasks
+    .filter(task => isProject(task))
+    .sort((a, b) => (a.title || '').localeCompare(b.title || ''));
   const opts = ['<option value="">None</option>'];
-  projects.forEach(p => {
-    opts.push(`<option value="${p.id}" ${selectedId===p.id?'selected':''}>${esc(p.title)}</option>`);
+  projects.forEach(project => {
+    opts.push(`<option value="${project.id}" ${selectedId === project.id ? 'selected' : ''}>${esc(project.title)}</option>`);
   });
   return opts.join('');
 }
 
-function daysUntil(d) {
-  if (!d) return null;
-  return Math.floor((new Date(d+'T00:00:00') - new Date(today+'T00:00:00')) / 86400000);
+function getDueLabel(task) {
+  if (!task.due_date) return '';
+  if (task.due_date < today && task.status !== 'done') return `<span class="task-due overdue">Overdue · ${task.due_date}</span>`;
+  if (task.due_date === today) return '<span class="task-due" style="color:#d97706;font-weight:600">Due today</span>';
+  return `<span class="task-due">Due ${task.due_date}</span>`;
 }
 
-// --- View Logic ---
-// Inbox: status=inbox, not a subtask
+function isTodayCandidate(task) {
+  if (!isOpen(task) || task.status === 'inbox') return false;
+  if (isProject(task)) return false;
+  const taskTags = tags(task);
+  if (taskTags.includes('force-queue')) return false;
+  if (taskTags.includes('force-today')) return true;
+  if (task.scheduled_date === today) return true;
+  if (task.due_date && task.due_date <= today) return true;
+  return false;
+}
+
 function getInbox() {
-  return allTasks.filter(t => t.status === 'inbox' && !isSubtask(t))
-    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+  return allTasks
+    .filter(task => task.status === 'inbox' && isTopLevel(task) && isOpen(task))
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 }
 
-// Today: show actionable items due/scheduled today across Tasks, Reminders, and Project Tasks.
-// Projects themselves stay in Queue as containers, not Today action items.
-// Manual queue override: force-queue keeps an item out of Today until explicitly moved back.
 function getToday() {
-  const items = allTasks.filter(t => {
-    if (!isOpen(t) || t.status === 'inbox') return false;
-    if (isProject(t)) return false;
-    if (tags(t).includes('force-queue')) return false;
-    if (tags(t).includes('force-today')) return true;
-    if (t.scheduled_date === today) return true;
-    if (t.due_date && t.due_date <= today) return true;
-    return false;
-  });
-  return items.sort((a,b) => priorityScore(a) - priorityScore(b));
+  return allTasks.filter(isTodayCandidate).sort(compareTasks);
 }
 
-// Queue: everything active that's not in inbox and not in today (and not subtasks)
 function getQueue() {
-  const todayIds = new Set(getToday().map(t => t.id));
-  return allTasks.filter(t => {
-    if (!isOpen(t)) return false;
-    if (t.status === 'inbox') return false;
-    if (isSubtask(t)) return false;
-    if (todayIds.has(t.id)) return false;
-    if (showCompleted === false && t.status === 'done') return false;
-    return true;
-  }).sort((a,b) => {
-    const p = priorityScore(a) - priorityScore(b);
-    if (p !== 0) return p;
-    const ad = a.due_date || '9999-12-31';
-    const bd = b.due_date || '9999-12-31';
-    return ad.localeCompare(bd);
-  });
+  const todayIds = new Set(getToday().map(task => task.id));
+  return allTasks.filter(task => {
+    if (!isTopLevel(task)) return false;
+    if (task.status === 'inbox') return false;
+    if (!showCompleted && !isOpen(task)) return false;
+    if (todayIds.has(task.id)) return false;
+    return [ITEM_KIND.PROJECT, ITEM_KIND.TASK, ITEM_KIND.REMINDER].includes(task._itemKind);
+  }).sort(compareTasks);
 }
 
 function getCounts() {
   return { inbox: getInbox().length, today: getToday().length, queue: getQueue().length };
 }
 
-// --- Load ---
+function getIntegrityIssues() {
+  const issues = [];
+  allTasks.forEach(task => {
+    if (isProjectTask(task) && !task._projectId) {
+      issues.push(`Project Task missing project: ${task.title}`);
+    }
+    if (isProjectTask(task) && task._projectId && !getTask(task._projectId)) {
+      issues.push(`Project Task has missing parent project: ${task.title}`);
+    }
+    if (isProject(task) && !isTopLevel(task)) {
+      issues.push(`Project nested under another item: ${task.title}`);
+    }
+  });
+  return issues;
+}
+
 async function loadTasks() {
   const { data, error } = await sb.from('tasks').select('*').order('created_at', { ascending: false });
-  if (error) { console.error(error); return; }
-  allTasks = data || [];
+  if (error) {
+    console.error(error);
+    document.getElementById('content').innerHTML = '<div class="panel"><div class="empty">Could not load tasks.</div></div>';
+    return;
+  }
+  allTasks = normalizeTasks(data || []);
   await loadSparkProjects();
   render();
 }
@@ -290,271 +396,344 @@ async function loadSparkProjects() {
   const { data } = await sb.from('marketing_requests')
     .select('id,request_types,requester_email,status,created_at')
     .order('created_at', { ascending: false }).limit(20);
-  sparkProjects = (data || []).filter(r => !['delivered','cancelled','archived','done'].includes(String(r.status||'').toLowerCase()));
-
-  // Comps tab removed — Spark requests tracked as tasks/projects
+  sparkProjects = (data || []).filter(r => !['delivered', 'cancelled', 'archived', 'done'].includes(String(r.status || '').toLowerCase()));
 }
 
-// --- Render ---
-function render() { renderSidebar(); renderTopbar(); renderContent(); }
+function render() {
+  renderSidebar();
+  renderTopbar();
+  renderContent();
+}
 
 function renderSidebar() {
   const counts = getCounts();
-  const overdue = allTasks.filter(t => t.due_date && t.due_date < today && isOpen(t) && !isSubtask(t)).length;
+  const overdue = allTasks.filter(task => task.due_date && task.due_date < today && isOpen(task) && !isProject(task) && isTopLevel(task)).length;
   document.getElementById('sidebar').innerHTML = `
-    <div class="sidebar-logo"><h1>ZERO ZERO TWO</h1><span>Task Manager</span></div>
+    <div class="sidebar-logo"><h1>ZERO ZERO TWO</h1><span>Task Manager · v${APP_VERSION}</span></div>
     <div class="nav-section">Views</div>
-    ${VIEWS.map(v => `
-      <div class="nav-item ${currentView===v.id?'active':''}" onclick="switchView('${v.id}')">
-        ${v.icon} ${v.label}
-        ${counts[v.id]>0?`<span class="nav-badge ${v.id==='today'?'':'g'}">${counts[v.id]}</span>`:''}
+    ${VIEWS.map(view => `
+      <div class="nav-item ${currentView === view.id ? 'active' : ''}" onclick="switchView('${view.id}')">
+        ${view.icon} ${view.label}
+        ${counts[view.id] > 0 ? `<span class="nav-badge ${view.id === 'today' ? '' : 'g'}">${counts[view.id]}</span>` : ''}
       </div>
     `).join('')}
-    ${overdue>0?`<div class="nav-item" style="color:var(--coral);" onclick="switchView('today')">⚠️ Overdue <span class="nav-badge">${overdue}</span></div>`:''}
+    ${overdue > 0 ? `<div class="nav-item" style="color:var(--coral);" onclick="switchView('today')">⚠️ Overdue <span class="nav-badge">${overdue}</span></div>` : ''}
   `;
-  document.getElementById('mobileTabs').innerHTML = VIEWS.map(v =>
-    `<span class="tab ${currentView===v.id?'active':''}" onclick="switchView('${v.id}')">${v.icon} ${v.label}</span>`
+  document.getElementById('mobileTabs').innerHTML = VIEWS.map(view =>
+    `<span class="tab ${currentView === view.id ? 'active' : ''}" onclick="switchView('${view.id}')">${view.icon} ${view.label}</span>`
   ).join('');
 }
 
 function renderTopbar() {
-  const label = VIEWS.find(v=>v.id===currentView)?.label||'Tasks';
-  const d = new Date();
-  const dateStr = d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const label = VIEWS.find(view => view.id === currentView)?.label || 'Tasks';
+  const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const issues = getIntegrityIssues();
   document.getElementById('topbar').innerHTML = `
     <h2>${label}</h2>
     <div class="topbar-right">
-      <span class="topbar-date">${dateStr}</span>
-      ${currentView==='queue'?`<button class="btn btn-outline" onclick="toggleCompletedVisibility()">${showCompleted?'Hide Done':'Show Done'}</button>`:''}
+      <span class="topbar-date">${dateStr} · v${APP_VERSION}${issues.length ? ` · ${issues.length} model issue${issues.length === 1 ? '' : 's'}` : ''}</span>
+      ${currentView === 'queue' ? `<button class="btn btn-outline" onclick="toggleCompletedVisibility()">${showCompleted ? 'Hide Done' : 'Show Done'}</button>` : ''}
       <button class="btn btn-primary" onclick="openAddModal()">+ Add Task</button>
     </div>
   `;
 }
 
+function renderIntegrityPanel() {
+  const issues = getIntegrityIssues();
+  if (!issues.length) return '';
+  return `
+    <div class="panel" style="border-color:#fecaca;background:#fff7f7;">
+      <div class="panel-header"><h3>Model Integrity</h3><span class="panel-count">${issues.length}</span></div>
+      <ul class="task-list">
+        ${issues.map(issue => `<li class="task-item"><div class="task-body"><div class="task-title">${esc(issue)}</div></div></li>`).join('')}
+      </ul>
+    </div>
+  `;
+}
 
 function renderContent() {
-  let tasks;
-  switch(currentView) {
-    case 'inbox': tasks = getInbox(); break;
-    case 'today': tasks = getToday(); break;
-    case 'queue': tasks = getQueue(); break;
-    default: tasks = [];
-  }
+  let html = renderIntegrityPanel();
 
-  if (tasks.length === 0) {
-    const msgs = { inbox:'📥 Inbox clear — nothing to review.', today:'🎯 Today is clear.', queue:'📋 Queue is empty.' };
-    document.getElementById('content').innerHTML = `<div class="panel"><div class="empty">${msgs[currentView]||'Nothing here.'}</div></div>`;
+  if (currentView === 'today') {
+    const items = getToday();
+    if (!items.length) {
+      document.getElementById('content').innerHTML = html + `<div class="panel"><div class="empty">🎯 Today is clear.</div></div>`;
+      return;
+    }
+
+    const tasks = items.filter(task => task._itemKind === ITEM_KIND.TASK);
+    const reminders = items.filter(task => task._itemKind === ITEM_KIND.REMINDER);
+    const projectTasks = items.filter(task => task._itemKind === ITEM_KIND.PROJECT_TASK);
+
+    html += renderSection('🎯 Tasks', tasks);
+    html += renderSection('🔔 Reminders', reminders);
+    html += renderProjectTaskTodaySection(projectTasks);
+    document.getElementById('content').innerHTML = html;
     return;
   }
 
-  if (currentView === 'today') {
-    // Split: projects, tasks, reminders
-    const projects = tasks.filter(t => isProject(t));
-    const reminders = tasks.filter(t => isReminder(t) && !isProject(t));
-    const work = tasks.filter(t => !isProject(t) && !isReminder(t));
+  if (currentView === 'queue') {
+    const items = getQueue();
+    if (!items.length) {
+      document.getElementById('content').innerHTML = html + `<div class="panel"><div class="empty">📋 Queue is empty.</div></div>`;
+      return;
+    }
 
-    let html = '';
-    if (projects.length) html += renderProjectCards(projects);
-    if (work.length) html += renderSection('🎯 Tasks', work);
-    if (reminders.length) html += renderSection('🔔 Reminders', reminders);
-    document.getElementById('content').innerHTML = html;
-  } else {
-    // Inbox and Queue: flat list, but projects show as project cards
-    const projects = tasks.filter(t => isProject(t));
-    const flat = tasks.filter(t => !isProject(t));
+    const projects = items.filter(task => task._itemKind === ITEM_KIND.PROJECT);
+    const tasks = items.filter(task => task._itemKind === ITEM_KIND.TASK);
+    const reminders = items.filter(task => task._itemKind === ITEM_KIND.REMINDER);
 
-    let html = '';
-    if (projects.length) html += renderProjectCards(projects);
-    if (flat.length) html += renderSection(VIEWS.find(v=>v.id===currentView)?.label||'Tasks', flat);
+    html += renderProjectCards(projects);
+    html += renderSection('✅ Tasks', tasks);
+    html += renderSection('🔔 Reminders', reminders);
     document.getElementById('content').innerHTML = html;
+    return;
   }
+
+  const items = getInbox();
+  if (!items.length) {
+    document.getElementById('content').innerHTML = html + `<div class="panel"><div class="empty">📥 Inbox clear — nothing to review.</div></div>`;
+    return;
+  }
+
+  const projects = items.filter(task => task._itemKind === ITEM_KIND.PROJECT);
+  const tasks = items.filter(task => task._itemKind === ITEM_KIND.TASK);
+  const reminders = items.filter(task => task._itemKind === ITEM_KIND.REMINDER);
+
+  html += renderProjectCards(projects);
+  html += renderSection('📥 Tasks', tasks);
+  html += renderSection('🔔 Reminders', reminders);
+  document.getElementById('content').innerHTML = html;
 }
 
 function renderProjectCards(projects) {
-  return projects.map(p => {
-    const subs = subtasksOf(p.id).sort((a,b) => {
-      const aDone = a.status==='done'?1:0, bDone=b.status==='done'?1:0;
-      if(aDone!==bDone) return aDone-bDone;
-      return priorityScore(a)-priorityScore(b);
+  if (!projects.length) return '';
+  return projects.map(project => {
+    const projectTasks = projectTasksOf(project.id).sort((a, b) => {
+      const aDone = a.status === 'done' ? 1 : 0;
+      const bDone = b.status === 'done' ? 1 : 0;
+      if (aDone !== bDone) return aDone - bDone;
+      return compareTasks(a, b);
     });
-    const done = subs.filter(s=>s.status==='done').length;
-    const total = subs.length;
-    const pct = total>0 ? Math.round(done/total*100) : 0;
-
-    // Determine which subtasks are "today" (highlighted)
-    const todaySubIds = new Set();
-    subs.forEach(s => {
-      if(isOpen(s) && (s.scheduled_date===today || (s.due_date && s.due_date<=today))) todaySubIds.add(s.id);
-    });
+    const done = projectTasks.filter(task => task.status === 'done').length;
+    const total = projectTasks.length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    const todayProjectTaskIds = new Set(getToday().filter(task => task._projectId === project.id).map(task => task.id));
 
     return `
       <div class="project-card">
-        <div class="project-header" onclick="openDetail('${p.id}')">
+        <div class="project-header" onclick="openDetail('${project.id}')">
           <span class="project-icon">🔷</span>
-          <span class="project-name">${esc(p.title)}</span>
+          <span class="project-name">${esc(project.title)}</span>
           <span class="project-progress">${done}/${total}
             <span class="project-progress-bar"><span class="project-progress-fill" style="width:${pct}%"></span></span>
           </span>
-          <span class="tag ${PRIO_TAG[p.priority]}">${p.priority}</span>
+          <span class="tag ${PRIO_TAG[project.priority] || PRIO_TAG.medium}">${project.priority || 'medium'}</span>
         </div>
-        ${subs.length ? `<div class="project-subtasks"><ul class="task-list">
-          ${subs.map(s => {
-            const highlighted = todaySubIds.has(s.id);
-            const notToday = !highlighted && s.status!=='done';
-            return `<li class="task-item ${highlighted?'highlighted':''} ${notToday?'not-today':''}">
-              <div class="task-check ${s.status==='done'?'done':''}" onclick="event.stopPropagation();toggleDone('${s.id}',${s.status==='done'})"></div>
-              <div class="task-body" onclick="openDetail('${s.id}')" style="cursor:pointer">
-                <div class="task-title ${s.status==='done'?'struck':''}">${esc(s.title)}</div>
-                ${s.due_date?`<span class="task-due ${s.due_date<today&&s.status!=='done'?'overdue':''}">${s.due_date<=today?(s.due_date<today?'Overdue':'Due today'):'Due '+s.due_date}</span>`:''}
+        ${projectTasks.length ? `<div class="project-subtasks"><ul class="task-list">
+          ${projectTasks.map(task => {
+            const highlighted = todayProjectTaskIds.has(task.id);
+            const muted = !highlighted && task.status !== 'done';
+            return `<li class="task-item ${highlighted ? 'highlighted' : ''} ${muted ? 'not-today' : ''}">
+              <div class="task-check ${task.status === 'done' ? 'done' : ''}" onclick="event.stopPropagation();toggleDone('${task.id}', ${task.status === 'done'})"></div>
+              <div class="task-body" onclick="openDetail('${task.id}')" style="cursor:pointer">
+                <div class="task-title ${task.status === 'done' ? 'struck' : ''}">${esc(task.title)}</div>
+                ${getDueLabel(task)}
               </div>
             </li>`;
           }).join('')}
-        </ul></div>` : `<div style="padding:12px 18px;color:var(--text-light);font-size:12px;">No subtasks yet. Open project to add.</div>`}
+        </ul></div>` : `<div style="padding:12px 18px;color:var(--text-light);font-size:12px;">No Project Tasks yet. Open project to add one.</div>`}
       </div>
     `;
   }).join('');
 }
 
+function renderProjectTaskTodaySection(projectTasks) {
+  if (!projectTasks.length) return '';
+  const grouped = new Map();
+  projectTasks.forEach(task => {
+    const key = task._projectId || 'orphan';
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(task);
+  });
+
+  const cards = Array.from(grouped.entries()).map(([projectId, tasks]) => {
+    const project = getTask(projectId);
+    return `
+      <div class="panel">
+        <div class="panel-header">
+          <h3>🧩 ${esc(project?.title || 'Missing Project')}</h3>
+          <span class="panel-count">${tasks.length}</span>
+        </div>
+        <ul class="task-list">${tasks.sort(compareTasks).map(renderTaskItem).join('')}</ul>
+      </div>
+    `;
+  });
+
+  return cards.join('');
+}
+
 function renderSection(title, tasks) {
   if (!tasks.length) return '';
-  return `<div class="panel">
-    <div class="panel-header"><h3>${title}</h3><span class="panel-count">${tasks.length}</span></div>
-    <ul class="task-list">${tasks.map(renderTaskItem).join('')}</ul>
-  </div>`;
-}
-
-function renderTaskItem(t) {
-  const isDone = t.status==='done';
-  const isOverdue = t.due_date && t.due_date<today && !isDone;
-  const isDueToday = t.due_date===today;
-  let dueLabel = '';
-  if(isOverdue) dueLabel=`<span class="task-due overdue">Overdue · ${t.due_date}</span>`;
-  else if(isDueToday) dueLabel=`<span class="task-due" style="color:#d97706;font-weight:600">Due today</span>`;
-  else if(t.due_date) dueLabel=`<span class="task-due">Due ${t.due_date}</span>`;
-
-  const type = getType(t);
-  const typeBadge = type==='reminder' ? '<span class="tag tag-type-reminder">🔔 reminder</span>'
-    : type==='project' ? '<span class="tag tag-type-project">🔷 project</span>'
-    : '<span class="tag tag-type-task">✅ task</span>';
-
-  return `<li class="task-item">
-    <div class="task-check ${isDone?'done':''}" onclick="event.stopPropagation();toggleDone('${t.id}',${isDone})"></div>
-    <div class="task-body" onclick="openDetail('${t.id}')" style="cursor:pointer">
-      <div class="task-title ${isDone?'struck':''}">${esc(t.title)}</div>
-      ${t.description?`<div class="task-desc">${esc(t.description)}</div>`:''}
-      <div class="task-meta">
-        <span class="tag ${PRIO_TAG[t.priority]}">${t.priority}</span>
-        ${typeBadge}
-        ${t.source?`<span class="tag tag-src">${SRC_ICON[t.source]||''} ${t.source}</span>`:''}
-        ${dueLabel}
-      </div>
+  return `
+    <div class="panel">
+      <div class="panel-header"><h3>${title}</h3><span class="panel-count">${tasks.length}</span></div>
+      <ul class="task-list">${tasks.map(renderTaskItem).join('')}</ul>
     </div>
-    ${t.estimated_minutes?`<span class="task-est">~${t.estimated_minutes}m</span>`:''}
-  </li>`;
+  `;
 }
 
-// --- Actions ---
-function switchView(v) { currentView=v; render(); }
-function toggleCompletedVisibility() { showCompleted=!showCompleted; render(); }
-
-function filterCategory(cat) {
-  currentView='queue'; render();
-  const tasks=allTasks.filter(t=>t.category===cat&&isOpen(t)&&!isSubtask(t)).sort((a,b)=>priorityScore(a)-priorityScore(b));
-  document.getElementById('content').innerHTML = renderSection(`${cat[0].toUpperCase()+cat.slice(1)} Tasks`, tasks);
+function renderTaskItem(task) {
+  const isDone = task.status === 'done';
+  const project = task._projectId ? getTask(task._projectId) : null;
+  return `
+    <li class="task-item">
+      <div class="task-check ${isDone ? 'done' : ''}" onclick="event.stopPropagation();toggleDone('${task.id}', ${isDone})"></div>
+      <div class="task-body" onclick="openDetail('${task.id}')" style="cursor:pointer">
+        <div class="task-title ${isDone ? 'struck' : ''}">${esc(task.title)}</div>
+        ${project ? `<div class="task-desc">🔷 ${esc(project.title)}</div>` : ''}
+        ${task.description ? `<div class="task-desc">${esc(task.description)}</div>` : ''}
+        <div class="task-meta">
+          <span class="tag ${PRIO_TAG[task.priority] || PRIO_TAG.medium}">${task.priority || 'medium'}</span>
+          ${TYPE_BADGE[task._itemKind] || TYPE_BADGE[ITEM_KIND.TASK]}
+          ${task.source ? `<span class="tag tag-src">${SRC_ICON[task.source] || ''} ${task.source}</span>` : ''}
+          ${getDueLabel(task)}
+        </div>
+      </div>
+      ${task.estimated_minutes ? `<span class="task-est">~${task.estimated_minutes}m</span>` : ''}
+    </li>
+  `;
 }
 
-async function toggleDone(id,wasDone) {
-  const newStatus=wasDone?'active':'done';
-  const update={status:newStatus};
-  if(!wasDone) update.completed_at=new Date().toISOString(); else update.completed_at=null;
-  const {error}=await sb.from('tasks').update(update).eq('id',id);
-  if(error){console.error(error);return;}
-  const t=allTasks.find(t=>t.id===id);
-  if(t){t.status=newStatus;t.completed_at=update.completed_at;}
-
-  // If all subtasks done, auto-complete parent project
-  const parentId = parentProjectId(t);
-  if(!wasDone && t && parentId) {
-    const parent = allTasks.find(p=>p.id===parentId);
-    if(parent && isProject(parent)) {
-      const subs = subtasksOf(parent.id);
-      if(subs.length && subs.every(s=>s.status==='done')) {
-        await sb.from('tasks').update({status:'done',completed_at:new Date().toISOString()}).eq('id',parent.id);
-        parent.status='done'; parent.completed_at=new Date().toISOString();
-      }
-    }
-  }
+function switchView(viewId) {
+  currentView = viewId;
   render();
 }
 
-function openDetail(id) {
-  const t=allTasks.find(t=>t.id===id);
-  if(!t) return;
-  const type=getType(t);
-  const parentId = parentProjectId(t);
-  const parentProject = parentId ? allTasks.find(p=>p.id===parentId) : null;
+function toggleCompletedVisibility() {
+  showCompleted = !showCompleted;
+  render();
+}
 
-  let subtaskHtml = '';
-  if(isProject(t)) {
-    const subs=subtasksOf(t.id);
-    subtaskHtml = `
-      <div class="detail-field"><label>Project Tasks (${subs.filter(s=>s.status==='done').length}/${subs.length})</label>
-        <ul style="list-style:none;padding:0;">
-          ${subs.map(s=>`<li style="padding:4px 0;font-size:12px;${s.status==='done'?'text-decoration:line-through;color:var(--text-light);':''}">
-            ${s.status==='done'?'✅':'⬜'} ${esc(s.title)}
-          </li>`).join('')}
-        </ul>
-        <button class="btn btn-outline btn-sm" onclick="openAddSubtask('${t.id}')" style="margin-top:8px;">+ Add Project Task</button>
-      </div>
-    `;
+async function patchTask(id, patch) {
+  const { data, error } = await sb.from('tasks').update(patch).eq('id', id).select().single();
+  if (error) {
+    console.error(error);
+    throw error;
   }
+  const idx = allTasks.findIndex(task => task.id === id);
+  if (idx >= 0) allTasks[idx] = normalizeTask(data);
+  return allTasks[idx] || normalizeTask(data);
+}
+
+async function syncProjectCompletion(projectId) {
+  if (!projectId) return;
+  const project = getTask(projectId);
+  if (!project || !isProject(project)) return;
+  const projectTasks = projectTasksOf(projectId);
+  if (!projectTasks.length) return;
+  const allDone = projectTasks.every(task => task.status === 'done');
+  if (allDone && project.status !== 'done') {
+    await patchTask(projectId, { status: 'done', completed_at: new Date().toISOString() });
+  }
+  if (!allDone && project.status === 'done') {
+    await patchTask(projectId, { status: 'active', completed_at: null });
+  }
+}
+
+async function toggleDone(id, wasDone) {
+  const task = getTask(id);
+  if (!task) return;
+  const newStatus = wasDone ? 'active' : 'done';
+  const patch = { status: newStatus, completed_at: wasDone ? null : new Date().toISOString() };
+  const updated = await patchTask(id, patch);
+  await syncProjectCompletion(updated._projectId);
+  render();
+}
+
+function getEditableType(task) {
+  if (isProjectTask(task)) return ITEM_KIND.PROJECT_TASK;
+  return task._itemKind;
+}
+
+function typeOptionsHtml(task) {
+  const current = getEditableType(task);
+  return [
+    { value: ITEM_KIND.TASK, label: '✅ Task' },
+    { value: ITEM_KIND.REMINDER, label: '🔔 Reminder' },
+    { value: ITEM_KIND.PROJECT, label: '🔷 Project' },
+    ...(isProjectTask(task) ? [{ value: ITEM_KIND.PROJECT_TASK, label: '🧩 Project Task' }] : []),
+  ].map(option => `<option value="${option.value}" ${current === option.value ? 'selected' : ''}>${option.label}</option>`).join('');
+}
+
+function openDetail(id) {
+  const task = getTask(id);
+  if (!task) return;
+  const project = task._projectId ? getTask(task._projectId) : null;
+  const projectTasks = isProject(task) ? projectTasksOf(task.id) : [];
 
   document.getElementById('detailContent').innerHTML = `
-    ${parentProject?`<div style="font-size:11px;color:var(--blue);margin-bottom:8px;">🔷 ${esc(parentProject.title)}</div>`:''}
+    ${project ? `<div style="font-size:11px;color:var(--blue);margin-bottom:8px;">🔷 ${esc(project.title)}</div>` : ''}
     <div class="detail-field"><label>Title</label>
-      <input value="${esc(t.title)}" onchange="updateField('${t.id}','title',this.value)" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;font-weight:600;" />
+      <input value="${esc(task.title)}" onchange="updateField('${task.id}','title',this.value)" style="width:100%;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:13px;font-weight:600;" />
     </div>
     <div class="detail-field"><label>Description</label>
-      <textarea onchange="updateField('${t.id}','description',this.value)" style="width:100%;min-height:84px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;line-height:1.4;resize:vertical;">${esc(t.description||'')}</textarea>
+      <textarea onchange="updateField('${task.id}','description',this.value)" style="width:100%;min-height:84px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;line-height:1.4;resize:vertical;">${esc(task.description || '')}</textarea>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div class="detail-field"><label>Status</label>
-        <select onchange="updateField('${t.id}','status',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
-          ${['inbox','today','queue','done','cancelled'].map(s=>`<option value="${s}" ${t.status===s?'selected':''}>${s}</option>`).join('')}
+        <select onchange="updateField('${task.id}','status',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+          ${['inbox', 'active', 'done', 'cancelled'].map(status => `<option value="${status}" ${task.status === status ? 'selected' : ''}>${status}</option>`).join('')}
         </select>
       </div>
       <div class="detail-field"><label>Priority</label>
-        <select onchange="updateField('${t.id}','priority',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
-          ${['critical','high','medium','low'].map(p=>`<option value="${p}" ${t.priority===p?'selected':''}>${p}</option>`).join('')}
+        <select onchange="updateField('${task.id}','priority',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+          ${['critical', 'high', 'medium', 'low'].map(priority => `<option value="${priority}" ${task.priority === priority ? 'selected' : ''}>${priority}</option>`).join('')}
         </select>
       </div>
     </div>
     <div class="detail-field"><label>Type</label>
-      <select onchange="updateType('${t.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
-        <option value="task" ${type==='task'?'selected':''}>✅ Task</option>
-        <option value="reminder" ${type==='reminder'?'selected':''}>🔔 Reminder</option>
-        <option value="project" ${type==='project'?'selected':''}>🔷 Project</option>
+      <select onchange="updateType('${task.id}',this.value)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+        ${typeOptionsHtml(task)}
       </select>
     </div>
-    ${!isProject(t) ? `<div class="detail-field"><label>Parent Project</label>
-      <select onchange="setParentProject('${t.id}', this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
-        ${projectOptionsHtml(parentProjectId(t) || '')}
+    ${!isProject(task) ? `<div class="detail-field"><label>Project</label>
+      <select onchange="setParentProject('${task.id}', this.value || null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;">
+        ${projectOptionsHtml(task._projectId || '')}
       </select>
     </div>` : ''}
     <div class="detail-field"><label>Due Date</label>
-      <input type="date" value="${t.due_date||''}" onchange="updateField('${t.id}','due_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
+      <input type="date" value="${task.due_date || ''}" onchange="updateField('${task.id}','due_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
+    </div>
+    <div class="detail-field"><label>Scheduled Date</label>
+      <input type="date" value="${task.scheduled_date || ''}" onchange="updateField('${task.id}','scheduled_date',this.value||null)" style="width:100%;padding:6px;border-radius:5px;border:1px solid var(--border);font-size:12px;" />
     </div>
     <div class="detail-field"><label>Notes</label>
-      <textarea onchange="updateField('${t.id}','notes',this.value)" style="width:100%;min-height:80px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;line-height:1.4;resize:vertical;">${esc(t.notes||'')}</textarea>
+      <textarea onchange="updateField('${task.id}','notes',this.value)" style="width:100%;min-height:80px;padding:8px;border-radius:6px;border:1px solid var(--border);font-family:inherit;font-size:12px;line-height:1.4;resize:vertical;">${esc(task.notes || '')}</textarea>
     </div>
-    ${subtaskHtml}
-    <div class="detail-field"><label>Created</label><div style="font-size:12px;">${new Date(t.created_at).toLocaleString()} by ${t.created_by}</div></div>
-    ${t.completed_at?`<div class="detail-field"><label>Completed</label><div style="font-size:12px;">${new Date(t.completed_at).toLocaleString()}</div></div>`:''}
-    <div style="margin-top:20px;display:flex;gap:8px;">
-      ${t.status!=='done'?`<button class="btn btn-primary btn-sm" onclick="toggleDone('${t.id}',false);closeDetail();">✓ Done</button>`:''}
-      <button class="btn btn-outline btn-sm" onclick="moveToToday('${t.id}')">→ Move to Today</button>
-      <button class="btn btn-outline btn-sm" onclick="moveToQueue('${t.id}')">→ Queue</button>
-      <button class="btn btn-outline btn-sm" style="color:var(--coral);" onclick="deleteTask('${t.id}')">🗑</button>
+    ${isProject(task) ? `
+      <div class="detail-field"><label>Project Tasks (${projectTasks.filter(projectTask => projectTask.status === 'done').length}/${projectTasks.length})</label>
+        <ul style="list-style:none;padding:0;">
+          ${projectTasks.map(projectTask => `<li style="padding:4px 0;font-size:12px;${projectTask.status === 'done' ? 'text-decoration:line-through;color:var(--text-light);' : ''}">${projectTask.status === 'done' ? '✅' : '⬜'} ${esc(projectTask.title)}</li>`).join('')}
+        </ul>
+        <button class="btn btn-outline btn-sm" onclick="openAddProjectTask('${task.id}')" style="margin-top:8px;">+ Add Project Task</button>
+      </div>
+    ` : ''}
+    <div class="detail-field"><label>Model</label>
+      <div style="font-size:12px;line-height:1.5;">
+        kind: <strong>${task._itemKind}</strong><br>
+        project: ${task._projectId ? esc(project?.title || task._projectId) : 'none'}<br>
+        parent_id: ${task.parent_id || 'null'}<br>
+        depends_on: ${Array.isArray(task.depends_on) ? esc(task.depends_on.join(', ')) : (task.depends_on || 'null')}
+      </div>
+    </div>
+    <div class="detail-field"><label>Created</label><div style="font-size:12px;">${new Date(task.created_at).toLocaleString()} by ${task.created_by || 'unknown'}</div></div>
+    ${task.completed_at ? `<div class="detail-field"><label>Completed</label><div style="font-size:12px;">${new Date(task.completed_at).toLocaleString()}</div></div>` : ''}
+    <div style="margin-top:20px;display:flex;gap:8px;flex-wrap:wrap;">
+      ${task.status !== 'done' ? `<button class="btn btn-primary btn-sm" onclick="toggleDone('${task.id}', false);closeDetail();">✓ Done</button>` : ''}
+      <button class="btn btn-outline btn-sm" onclick="moveToToday('${task.id}')">→ Move to Today</button>
+      <button class="btn btn-outline btn-sm" onclick="moveToQueue('${task.id}')">→ Queue</button>
+      <button class="btn btn-outline btn-sm" style="color:var(--coral);" onclick="deleteTask('${task.id}')">🗑</button>
     </div>
   `;
   document.getElementById('detailPanel').classList.add('show');
@@ -567,149 +746,216 @@ function closeDetail() {
 }
 
 async function moveToToday(id) {
-  // Set scheduled_date to today and status to active
-  const t = allTasks.find(x=>x.id===id);
-  if (t) {
-    let tgs = Array.isArray(t.tags) ? [...t.tags] : [];
-    tgs = tgs.filter(x => !['force-queue'].includes(String(x).toLowerCase()));
-    await updateField(id,'tags',tgs.length ? tgs : null);
-  }
-  await updateField(id,'scheduled_date',today);
-  if(allTasks.find(t=>t.id===id)?.status==='inbox') await updateField(id,'status','active');
+  const task = getTask(id);
+  if (!task) return;
+  let nextTags = rawTags(task).filter(tag => !['force-queue', 'force-today'].includes(String(tag).toLowerCase()));
+  nextTags.push('force-today');
+  await patchTask(id, { tags: nextTags, scheduled_date: today, status: task.status === 'inbox' ? 'active' : task.status });
+  render();
   closeDetail();
 }
 
 async function moveToQueue(id) {
-  // Clear scheduled_date, set status to active, and add force-queue override
-  await updateField(id,'scheduled_date',null);
-  if(allTasks.find(t=>t.id===id)?.status==='inbox') await updateField(id,'status','active');
-  const t=allTasks.find(t=>t.id===id);
-  if(t) {
-    let tgs=Array.isArray(t.tags)?[...t.tags]:[];
-    tgs=tgs.filter(x=>!['force-today','force-queue'].includes(String(x).toLowerCase()));
-    tgs.push('force-queue');
-    await updateField(id,'tags',tgs.length?tgs:null);
-  }
+  const task = getTask(id);
+  if (!task) return;
+  let nextTags = rawTags(task).filter(tag => !['force-today', 'force-queue'].includes(String(tag).toLowerCase()));
+  nextTags.push('force-queue');
+  await patchTask(id, { tags: nextTags, scheduled_date: null, status: task.status === 'inbox' ? 'active' : task.status });
+  render();
   closeDetail();
 }
 
+function buildTagsForKind(task, nextKind) {
+  const preserved = rawTags(task).filter(tag => {
+    const lower = String(tag).toLowerCase();
+    if (lower.startsWith(MODEL_KIND_PREFIX)) return false;
+    if (lower === 'project' || lower === 'reminder') return false;
+    return true;
+  });
+  if (nextKind === ITEM_KIND.PROJECT) preserved.push('project');
+  if (nextKind === ITEM_KIND.REMINDER) preserved.push('reminder');
+  preserved.push(`${MODEL_KIND_PREFIX}${nextKind}`);
+  return preserved;
+}
+
 async function updateType(id, typeValue) {
-  const t=allTasks.find(x=>x.id===id)||{};
-  let tgs=Array.isArray(t.tags)?[...t.tags]:[];
-  tgs=tgs.filter(x=>!['reminder','project'].includes(String(x).toLowerCase()));
-  if(typeValue==='reminder') tgs.push('reminder');
-  if(typeValue==='project') tgs.push('project');
-  await updateField(id,'tags',tgs.length?tgs:null);
-}
-
-async function setParentProject(taskId, parentId) {
-  const t = allTasks.find(x=>x.id===taskId);
-  if (!t) return;
-  if (parentId === taskId) { alert('A task cannot be its own parent project.'); return; }
-  const update = { depends_on: parentId ? [parentId] : null };
-  const { error } = await sb.from('tasks').update(update).eq('id', taskId);
-  if (error) { console.error(error); alert('Could not update parent project.'); return; }
-  t.depends_on = update.depends_on;
+  const task = getTask(id);
+  if (!task) return;
+  if (typeValue === ITEM_KIND.PROJECT_TASK && !task._projectId) {
+    alert('Assign this item to a project before marking it as a Project Task.');
+    openDetail(id);
+    return;
+  }
+  if (typeValue === ITEM_KIND.PROJECT && task._projectId) {
+    await setParentProject(id, null, { skipReopen: true });
+  }
+  await patchTask(id, { tags: buildTagsForKind(task, typeValue) });
   render();
-  openDetail(taskId);
+  openDetail(id);
 }
 
-async function updateField(id,field,value) {
-  if(field==='title'&&!String(value||'').trim()){alert('Title cannot be empty');return;}
-  const update={};
-  update[field]=field==='title'?String(value).trim():value;
-  if(field==='status'&&value==='done') update.completed_at=new Date().toISOString();
-  if(field==='status'&&value!=='done') update.completed_at=null;
-  const {error}=await sb.from('tasks').update(update).eq('id',id);
-  if(error){console.error(error);return;}
-  const t=allTasks.find(t=>t.id===id);
-  if(t){t[field]=update[field];if(update.completed_at!==undefined)t.completed_at=update.completed_at;}
+async function setParentProject(taskId, projectId, options = {}) {
+  const task = getTask(taskId);
+  if (!task) return;
+  if (projectId === taskId) {
+    alert('An item cannot belong to itself.');
+    return;
+  }
+  const currentKind = projectId ? ITEM_KIND.PROJECT_TASK : (isReminder(task) ? ITEM_KIND.REMINDER : ITEM_KIND.TASK);
+  const patch = {
+    parent_id: projectId,
+    depends_on: projectId ? [projectId] : null,
+    tags: buildTagsForKind(task, currentKind),
+    status: task.status === 'inbox' && projectId ? 'active' : task.status,
+  };
+  await patchTask(taskId, patch);
+  await syncProjectCompletion(projectId);
+  if (task._projectId && task._projectId !== projectId) await syncProjectCompletion(task._projectId);
+  render();
+  if (!options.skipReopen) openDetail(taskId);
+}
+
+async function updateField(id, field, value) {
+  const task = getTask(id);
+  if (!task) return;
+  if (field === 'title' && !String(value || '').trim()) {
+    alert('Title cannot be empty');
+    return;
+  }
+  const patch = { [field]: field === 'title' ? String(value).trim() : value };
+  if (field === 'status') patch.completed_at = value === 'done' ? new Date().toISOString() : null;
+  const updated = await patchTask(id, patch);
+  await syncProjectCompletion(updated._projectId);
   render();
 }
 
 async function deleteTask(id) {
-  if(!confirm('Delete this task?')) return;
-  await sb.from('tasks').delete().eq('id',id);
-  allTasks=allTasks.filter(t=>t.id!==id);
-  closeDetail(); render();
-}
-
-function openAddModal() {
-  const sel = document.getElementById('newParentProject');
-  if (sel) sel.innerHTML = projectOptionsHtml('');
-  document.getElementById('addModal').classList.add('show');
-  document.getElementById('newTitle').focus();
-}
-function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
-
-async function addTask() {
-  const title=document.getElementById('newTitle').value.trim();
-  if(!title) return;
-  const typeVal=document.getElementById('newType').value;
-  let tgs=[];
-  if(typeVal==='reminder') tgs.push('reminder');
-  if(typeVal==='project') tgs.push('project');
-
-  const parentProjectId = document.getElementById('newParentProject').value || null;
-  const task={
-    title,
-    description: document.getElementById('newDesc').value.trim()||null,
-    priority: document.getElementById('newPriority').value,
-    category: 'business',
-    due_date: document.getElementById('newDue').value||null,
-    status: parentProjectId ? 'active' : 'inbox',
-    source: 'manual',
-    assigned_to: 'neil',
-    created_by: 'neil',
-    tags: tgs.length?tgs:null,
-    depends_on: parentProjectId ? [parentProjectId] : null,
-  };
-  const {data,error}=await sb.from('tasks').insert(task).select();
-  if(error){console.error(error);alert('Error adding task');return;}
-  if(data) allTasks.unshift(data[0]);
-  closeAddModal();
-  document.getElementById('newTitle').value='';
-  document.getElementById('newDesc').value='';
-  document.getElementById('newDue').value='';
-  document.getElementById('newParentProject').value='';
+  const task = getTask(id);
+  if (!task) return;
+  if (!confirm('Delete this task?')) return;
+  const parentProjectId = task._projectId;
+  const { error } = await sb.from('tasks').delete().eq('id', id);
+  if (error) {
+    console.error(error);
+    return;
+  }
+  allTasks = allTasks.filter(existing => existing.id !== id);
+  await syncProjectCompletion(parentProjectId);
+  closeDetail();
   render();
 }
 
-function openAddSubtask(parentId) {
-  closeDetail();
-  const title=prompt('Subtask title:');
-  if(!title||!title.trim()) return;
-  addSubtask(parentId,title.trim());
+function openAddModal() {
+  const projectSelect = document.getElementById('newParentProject');
+  if (projectSelect) projectSelect.innerHTML = projectOptionsHtml('');
+  document.getElementById('addModal').classList.add('show');
+  document.getElementById('newTitle').focus();
 }
 
-async function addSubtask(parentId,title) {
-  const parent=allTasks.find(t=>t.id===parentId);
-  const task={
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('show');
+}
+
+async function addTask() {
+  const title = document.getElementById('newTitle').value.trim();
+  if (!title) return;
+
+  const typeValue = document.getElementById('newType').value;
+  const projectId = document.getElementById('newParentProject').value || null;
+  const effectiveKind = projectId ? ITEM_KIND.PROJECT_TASK : typeValue;
+  const task = {
     title,
-    priority: parent?.priority||'medium',
-    category: parent?.category||'business',
+    description: document.getElementById('newDesc').value.trim() || null,
+    priority: document.getElementById('newPriority').value,
+    category: 'business',
+    due_date: document.getElementById('newDue').value || null,
+    status: projectId ? 'active' : 'inbox',
+    source: 'manual',
+    assigned_to: 'neil',
+    created_by: 'neil',
+    tags: buildTagsForKind({ tags: [] }, effectiveKind),
+    parent_id: projectId,
+    depends_on: projectId ? [projectId] : null,
+  };
+
+  const { data, error } = await sb.from('tasks').insert(task).select().single();
+  if (error) {
+    console.error(error);
+    alert('Error adding task');
+    return;
+  }
+
+  allTasks.unshift(normalizeTask(data));
+  await syncProjectCompletion(projectId);
+  closeAddModal();
+  document.getElementById('newTitle').value = '';
+  document.getElementById('newDesc').value = '';
+  document.getElementById('newDue').value = '';
+  document.getElementById('newParentProject').value = '';
+  render();
+}
+
+function openAddProjectTask(projectId) {
+  closeDetail();
+  const title = prompt('Project Task title:');
+  if (!title || !title.trim()) return;
+  addProjectTask(projectId, title.trim());
+}
+
+async function addProjectTask(projectId, title) {
+  const project = getTask(projectId);
+  const task = {
+    title,
+    priority: project?.priority || 'medium',
+    category: project?.category || 'business',
     status: 'active',
     source: 'manual',
     assigned_to: 'neil',
     created_by: 'neil',
-    depends_on: [parentId],
+    tags: buildTagsForKind({ tags: [] }, ITEM_KIND.PROJECT_TASK),
+    parent_id: projectId,
+    depends_on: [projectId],
   };
-  const {data,error}=await sb.from('tasks').insert(task).select();
-  if(error){console.error(error);return;}
-  if(data) allTasks.unshift(data[0]);
+
+  const { data, error } = await sb.from('tasks').insert(task).select().single();
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  allTasks.unshift(normalizeTask(data));
+  await syncProjectCompletion(projectId);
   render();
-  openDetail(parentId);
+  openDetail(projectId);
 }
 
-function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function esc(value) {
+  if (value == null) return '';
+  const div = document.createElement('div');
+  div.textContent = String(value);
+  return div.innerHTML;
+}
 
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeAddModal();closeDetail();}
-  if(e.key==='n'&&!e.metaKey&&!e.ctrlKey&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){e.preventDefault();openAddModal();}
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    closeAddModal();
+    closeDetail();
+  }
+  if (event.key === 'n' && !event.metaKey && !event.ctrlKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+    event.preventDefault();
+    openAddModal();
+  }
 });
 
+window.taskModelDebug = {
+  version: APP_VERSION,
+  getTasks: () => allTasks,
+  getIntegrityIssues,
+};
+
 loadTasks();
-setInterval(loadTasks,60000);
+setInterval(loadTasks, 60000);
+
 </script>
 </body>
 </html>
