@@ -164,7 +164,7 @@
       <label>Due Date</label><input type="date" id="newDue">
     </div>
     <div>
-      <label>Add as subtask under project</label>
+      <label>Add under parent project (optional)</label>
       <select id="newParentProject"><option value="">None</option></select>
     </div>
     <div class="modal-actions">
@@ -183,7 +183,7 @@
 
 <script>
 const SUPABASE_URL = 'https://qqlqqknlqqdyukxoyyty.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFxbHFxa25scXFkeXVreG95eXR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI1NTYzOTQsImV4cCI6MjA4ODEzMjM5NH0.jZBd3dM1aNjRqDXxL0a3p0V8BPtfdZ8I4LaAKN4_1mk';
+const SUPABASE_KEY = 'sb_publishable_X5eWGuEn9dF7Rf-fY_brtQ_41jRYKkF';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let allTasks = [];
@@ -217,6 +217,14 @@ function getType(t) { if (isProject(t)) return 'project'; if (isReminder(t)) ret
 function isOpen(t) { return !['done','cancelled'].includes(t.status); }
 function priorityScore(t) { return PRIO_ORDER[t.priority] ?? 2; }
 function subtasksOf(parentId) { return allTasks.filter(t => parentProjectId(t) === parentId); }
+function hasMissingParentProject(t) {
+  const pid = parentProjectId(t);
+  if (!pid) return false;
+  return !allTasks.some(p => p.id === pid && isProject(p));
+}
+function orphanedSubtasks() {
+  return allTasks.filter(t => hasMissingParentProject(t));
+}
 function projectOptionsHtml(selectedId = '') {
   const projects = allTasks.filter(t => isProject(t)).sort((a,b) => (a.title||'').localeCompare(b.title||''));
   const opts = ['<option value="">None</option>'];
@@ -278,7 +286,12 @@ function getQueue() {
 }
 
 function getCounts() {
-  return { inbox: getInbox().length, today: getToday().length, queue: getQueue().length };
+  return {
+    inbox: getInbox().length,
+    today: getToday().length,
+    queue: getQueue().length,
+    orphaned: orphanedSubtasks().length,
+  };
 }
 
 // --- Load ---
@@ -342,7 +355,22 @@ function renderContent() {
     case 'inbox': tasks = getInbox(); break;
     case 'today': tasks = getToday(); break;
     case 'queue': tasks = getQueue(); break;
+    case 'orphaned': tasks = orphanedSubtasks(); break;
     default: tasks = [];
+  }
+
+  if (currentView === 'orphaned') {
+    if (!tasks.length) {
+      document.getElementById('content').innerHTML = `<div class="empty">No orphaned subtasks. Parent-child integrity is clean.</div>`;
+      return;
+    }
+    document.getElementById('content').innerHTML = `
+      <div class="panel">
+        <div class="panel-header"><h3>Orphaned Project Subtasks</h3><span class="panel-count">${tasks.length}</span></div>
+        <div style="padding:14px 18px;font-size:12px;color:var(--text-light);border-bottom:1px solid var(--border);">Only items explicitly linked to a missing parent project belong here. Standalone tasks and reminders are valid and never appear in this warning state.</div>
+        <ul class="task-list">${tasks.map(renderTaskItem).join('')}</ul>
+      </div>`;
+    return;
   }
 
   if (tasks.length === 0) {
@@ -435,6 +463,9 @@ function renderTaskItem(t) {
   if(isOverdue) dueLabel=`<span class="task-due overdue">Overdue · ${t.due_date}</span>`;
   else if(isDueToday) dueLabel=`<span class="task-due" style="color:#d97706;font-weight:600">Due today</span>`;
   else if(t.due_date) dueLabel=`<span class="task-due">Due ${t.due_date}</span>`;
+  const integrityLabel = hasMissingParentProject(t)
+    ? '<span class="tag" style="background:#fef2f2;color:#b91c1c;">⚠️ orphaned subtask</span>'
+    : '';
 
   const type = getType(t);
   const typeBadge = type==='reminder' ? '<span class="tag tag-type-reminder">🔔 reminder</span>'
@@ -450,6 +481,7 @@ function renderTaskItem(t) {
         <span class="tag ${PRIO_TAG[t.priority]}">${t.priority}</span>
         ${typeBadge}
         ${t.source?`<span class="tag tag-src">${SRC_ICON[t.source]||''} ${t.source}</span>`:''}
+        ${integrityLabel}
         ${dueLabel}
       </div>
     </div>
@@ -626,8 +658,31 @@ async function updateField(id,field,value) {
 }
 
 async function deleteTask(id) {
-  if(!confirm('Delete this task?')) return;
-  await sb.from('tasks').delete().eq('id',id);
+  const task = allTasks.find(t=>t.id===id);
+  if(!task) return;
+
+  if (isProject(task)) {
+    const children = subtasksOf(id);
+    const childIds = children.map(t => t.id);
+    const msg = children.length
+      ? `Delete this project and its ${children.length} nested subtask${children.length===1?'':'s'}?`
+      : 'Delete this project?';
+    if(!confirm(msg)) return;
+    if (childIds.length) {
+      const { error: childErr } = await sb.from('tasks').delete().in('id', childIds);
+      if (childErr) { console.error(childErr); alert('Could not delete nested subtasks.'); return; }
+      allTasks = allTasks.filter(t => !childIds.includes(t.id));
+    }
+    const { error } = await sb.from('tasks').delete().eq('id',id);
+    if(error){console.error(error);alert('Could not delete project.');return;}
+    allTasks=allTasks.filter(t=>t.id!==id);
+    closeDetail(); render();
+    return;
+  }
+
+  if(!confirm('Delete this item?')) return;
+  const { error } = await sb.from('tasks').delete().eq('id',id);
+  if(error){console.error(error);alert('Could not delete task.');return;}
   allTasks=allTasks.filter(t=>t.id!==id);
   closeDetail(); render();
 }
